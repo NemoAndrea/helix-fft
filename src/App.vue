@@ -6,18 +6,18 @@
         <div class="layout-left"><div class="rotated">Built by Nemo Andrea</div></div>
         <div class="layout-central">
           <div class="ui-box ui-command-panel">
-            <div class="card card-accent">
+            <div v-ripple class="card card-accent elevation-3">
               <div class="card-title">Metadata card</div>
-              <v-btn disabled>Load example</v-btn>
+              <v-btn outlined color="white" @click="loadExample()">Load example</v-btn>
             </div>
-            <div class="card">
+            <div v-ripple class="card elevation-3">
               <div class="card-title">Helix parameters</div>
               <v-form
                       ref="form"
                       v-model="valid">
 
                 <v-text-field
-                        v-model="radius"
+                        v-model="radius_form"
                         :rules="numberRules"
                         label="Radius"
                         required
@@ -28,7 +28,7 @@
                 ></v-text-field>
 
                 <v-text-field
-                        v-model="rise"
+                        v-model="rise_form"
                         :rules="numberRules"
                         label="Rise"
                         required
@@ -39,9 +39,9 @@
                 ></v-text-field>
 
                 <v-text-field
-                        v-model="frequency"
+                        v-model="frequency_form"
                         :rules="numberRules"
-                        label="Frequency"
+                        label="Subunits per pitch"
                         required
                         filled
                         color="var(--primary)"
@@ -50,7 +50,7 @@
                 ></v-text-field>
 
                 <v-text-field
-                        v-model="unit_size"
+                        v-model="unit_size_form"
                         :rules="numberRules"
                         label="Unit size"
                         required
@@ -70,12 +70,15 @@
               </v-form>
             </div>
           </div>
-          <div class="ui-box ui-realspace-panel"><div class="card card-webgl">
+          <div class="ui-box ui-realspace-panel"><div class="card card-webgl elevation-3">
             <div class="card-title-float card-title">Realspace helix</div>
+            <helix-display :radius="radius" :rise="rise" :frequency="frequency" :unit_size="unit_size" />
           </div></div>
           <div class="ui-box ui-fft-panel">
-            <div class="card card-display">Display Controls</div>
-            <div class="card card-fft">FFT of helix (theory and computed)</div>
+            <div v-ripple class="card card-display elevation-3">Display Controls</div>
+            <div  v-ripple class="card card-fft elevation-3">FFT of helix (theory and computed)
+              <fourier-panel :radius="radius" :rise="rise" :frequency="frequency" :unit_size="unit_size" />
+            </div>
           </div>
         </div>
         <div class="layout-right"></div>
@@ -86,79 +89,41 @@
 </template>
 
 <script>
-import * as THREE from '../ext/three.module.js';
+import HelixDisplay from "./components/HelixDisplay";
+import FourierPanel from "./components/FourierPanel";
 
 export default {
   name: 'App'
   ,
-
+  components:{
+    HelixDisplay,
+    FourierPanel
+  },
   data: () => ({
     valid: false,
-    radius: "",
-    rise: "",
-    frequency: "",
-    unit_size: "",
+    radius_form: "",
+    radius: -1,
+    rise_form: "",
+    rise: -1,
+    frequency_form: "",
+    frequency: -1,
+    unit_size_form: "",
+    unit_size: -1,
     numberRules: [v => !!v || 'parameter is required',],
   }),
   methods: {
     computeHelix() {
-      console.log('Helix parameters: ' + this.radius + this.rise + this.frequency + this.unit_size);
-      const scalefac = 10/this.radius;  // the prefactor is an empirical value and might need to be made more robust
-
-      // get the div we will draw in
-      let container = document.querySelector('.card-webgl' );
-      let containerinfo = container.getBoundingClientRect();
-
-      // set up the camera
-      THREE.Object3D.DefaultUp = new THREE.Vector3( 0,0,1);
-      let camera = new THREE.PerspectiveCamera( 40, containerinfo.width/containerinfo.height, 0.1, 15000 );
-      camera.position.z = 50;
-      const cam_radius = 160;
-      camera.position.x = cam_radius;
-      let cam_angle = 0;  // initialise to 0
-      camera.lookAt( new THREE.Vector3(0,0,50) );
-
-      let scene = new THREE.Scene();
-
-      // set up helical building blocks
-      let geometry = new THREE.SphereGeometry( this.unit_size*scalefac, 12,12);
-      let material = new THREE.MeshNormalMaterial();
-
-      const amount = Math.ceil(100 / (this.rise*scalefac));
-
-      // build the helix
-      for ( var i = 0; i < amount ; i ++ ) {
-        let object = new THREE.Mesh( geometry, material );
-        object.position.x = this.radius*scalefac*Math.cos(i*2*Math.PI/this.frequency);
-        object.position.y = this.radius*scalefac*Math.sin(i*2*Math.PI/this.frequency);
-        object.position.z = i*this.rise*scalefac;
-
-
-        scene.add( object );
-      }
-
-      // setup render window
-      let renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true} );
-      renderer.setPixelRatio( window.devicePixelRatio );
-      renderer.setSize( containerinfo.width, containerinfo.height );
-      container.appendChild( renderer.domElement );
-
-      // function that is repeatedly automatically called
-      function animate() {
-        requestAnimationFrame( animate );
-        render();
-      }
-      function render(){
-        camera.position.x = cam_radius*Math.cos(cam_angle);
-        camera.position.y = cam_radius*Math.sin(cam_angle);
-        cam_angle = cam_angle + 0.01;
-
-        camera.lookAt( new THREE.Vector3(0,0,50) );
-        renderer.render( scene, camera );
-
-      }
-      animate();
+      this.radius = Number(this.radius_form);
+      this.rise = Number(this.rise_form);
+      this.frequency = Number(this.frequency_form);
+      this.unit_size = Number(this.unit_size_form);
     },
+    loadExample() {
+      this.radius = this.radius_form = 10;
+      this.rise = this.rise_form = 0.9;
+      this.frequency = this.frequency_form = 13;
+      this.unit_size = this. unit_size_form = 2;
+    }
   }
 };
 </script>
@@ -282,7 +247,6 @@ export default {
 
   .card-fft{
     border-radius: 0;
-    padding-top: 100%;
     /*aspect-ratio: 1 / 1;*/
   }
 
