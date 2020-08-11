@@ -1,6 +1,7 @@
 <template>
-        <div class="helix-display">
-        </div>
+    <div class="helix-display">
+        <div class="realspace-controls">Test</div>
+    </div>
 </template>
 
 <script>
@@ -9,69 +10,58 @@
     export default {
         name: "HelixDisplay",
         props: {
-            radius: {
-                type: Number,
-                default: -1
+            helixFamily: {
+                type: Array,
             },
-            rise: {
-                type: Number,
-                default: -1
-            },
-            frequency: {
-                type: Number,
-                default: -1
-            },
-            unit_size: {
-                type: Number,
-                default: -1
-            }
         },
         watch: {
             // eslint-disable-next-line no-unused-vars
-            radius (val){
-                this.refreshHelix()
+            helixFamily: {
+                handler: function () {
+                    this.refreshHelix()
+                },
+                deep: true
             },
-            // eslint-disable-next-line no-unused-vars
-            rise (val){
-                this.refreshHelix()
-            },
-            // eslint-disable-next-line no-unused-vars
-            frequency (val){
-                this.refreshHelix()
-            },
-            // eslint-disable-next-line no-unused-vars
-            unit_size (val){
-                this.refreshHelix()
-            }
         },
         data: () => ({
             scene: '',
-            geometry: '',
             material: '',
+            rotationRate: 0.01,
         }),
         methods:{
             refreshHelix(){
-                console.log('redrawing the helix (three.js)')
+                console.log('redrawing the helix (three.js)');
 
-                // clear the old helix
+                // clear the old helices
                 while(this.scene.children.length > 0){
                     this.scene.remove(this.scene.children[0]);
                 }
 
-                // compute relevant values
-                const scalefac = 10/this.radius;  // the prefactor is an empirical value and might need to be made more robust
-                const amount = Math.ceil(100 / (this.rise*scalefac));  // number of helical units to draw
-                this.geometry = new THREE.SphereGeometry( this.unit_size*scalefac, 12,12);
+                let helix = {};
 
-                // build the helix
-                for ( var i = 0; i < amount ; i ++ ) {
-                    let object = new THREE.Mesh( this.geometry, this.material );
-                    object.position.x = this.radius*scalefac*Math.cos(i*2*Math.PI/this.frequency);
-                    object.position.y = this.radius*scalefac*Math.sin(i*2*Math.PI/this.frequency);
-                    object.position.z = i*this.rise*scalefac;
+                // compute relevant scale to draw helix at
+                let max_radius=this.helixFamily[0]['radius'];
+                for (helix of this.helixFamily) {
+                    if ( 1/helix['radius'] < 1/max_radius ){
+                        max_radius = helix['radius']
+                    }
+                }
+                const scalefac = 10/max_radius;  // the prefactor is an empirical value and might need to be made more robust
+
+                for (helix of this.helixFamily) {
+                    const amount = Math.ceil( 100 / ( helix['rise']*scalefac ) );  // number of helical units to draw
+                    let geometry = new THREE.SphereGeometry( helix['unit_size']*scalefac, 12,12 );
+
+                    // build the helix
+                    for ( var i = 0; i < amount ; i ++ ) {
+                        let object = new THREE.Mesh( geometry, this.material );
+                        object.position.x = helix['radius'] * scalefac * Math.cos( i*2*Math.PI / helix['frequency'] );
+                        object.position.y = helix['radius'] * scalefac * Math.sin( i*2*Math.PI / helix['frequency'] );
+                        object.position.z = i*helix['rise'] * scalefac;
 
 
-                    this.scene.add( object );
+                        this.scene.add( object );
+                    }
                 }
 
             },
@@ -109,13 +99,15 @@
                 const render =  () => {
                     camera.position.x = cam_radius*Math.cos(cam_angle);
                     camera.position.y = cam_radius*Math.sin(cam_angle);
-                    cam_angle = cam_angle + 0.01;
+                    cam_angle = cam_angle + this.rotationRate;
 
                     camera.lookAt( new THREE.Vector3(0,0,50) );
                     renderer.render( this.scene, camera );
-
                 };
+
+                console.log('Realspace Helix display ready.');
                 animate()
+
             }
         },
         mounted() {
@@ -128,5 +120,11 @@
     .helix-display{
         height: 100%;
         width: 100%;
+        position: relative;
+    }
+
+    .realspace-controls{
+        position: absolute;
+        bottom: 10px
     }
 </style>

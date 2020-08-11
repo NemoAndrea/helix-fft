@@ -9,75 +9,21 @@
             <div v-ripple class="card card-accent elevation-3">
               <div class="card-title">Metadata card</div>
               <v-btn outlined color="white" @click="loadExample()">Load example</v-btn>
+              <br>current helix-family parameters: {{helixFamily}}
             </div>
             <div v-ripple class="card elevation-3">
               <div class="card-title">Helix parameters</div>
-              <v-form
-                      ref="form"
-                      v-model="valid">
-
-                <v-text-field
-                        v-model="radius_form"
-                        :rules="numberRules"
-                        label="Radius"
-                        required
-                        filled
-                        color="var(--primary)"
-                        suffix="nm"
-                        type="number"
-                ></v-text-field>
-
-                <v-text-field
-                        v-model="rise_form"
-                        :rules="numberRules"
-                        label="Rise"
-                        required
-                        filled
-                        color="var(--primary)"
-                        suffix="nm"
-                        type="number"
-                ></v-text-field>
-
-                <v-text-field
-                        v-model="frequency_form"
-                        :rules="numberRules"
-                        label="Subunits per pitch"
-                        required
-                        filled
-                        color="var(--primary)"
-                        suffix="nm"
-                        type="number"
-                ></v-text-field>
-
-                <v-text-field
-                        v-model="unit_size_form"
-                        :rules="numberRules"
-                        label="Unit size"
-                        required
-                        filled
-                        color="var(--primary)"
-                        suffix="nm"
-                        type="number"
-                ></v-text-field>
-
-                <v-btn
-                        :disabled="!valid"
-                        color="var(--primary)"
-                        @click="computeHelix">
-                  Compute
-                </v-btn>
-
-              </v-form>
+              <parameter-panel v-on:updateHelixFamily="helixFamily = arguments[0]"/>
             </div>
           </div>
           <div class="ui-box ui-realspace-panel"><div class="card card-webgl elevation-3">
             <div class="card-title-float card-title">Realspace helix</div>
-            <helix-display :radius="radius" :rise="rise" :frequency="frequency" :unit_size="unit_size" />
+            <helix-display :helixFamily="helixFamily" />
           </div></div>
           <div class="ui-box ui-fft-panel">
             <div v-ripple class="card card-display elevation-3">Display Controls</div>
             <div  v-ripple class="card card-fft elevation-3">FFT of helix (theory and computed)
-              <fourier-panel :radius="radius" :rise="rise" :frequency="frequency" :unit_size="unit_size" />
+              <fourier-panel :helixFamily="helixFamily" />
             </div>
           </div>
         </div>
@@ -91,39 +37,26 @@
 <script>
 import HelixDisplay from "./components/HelixDisplay";
 import FourierPanel from "./components/FourierPanel";
+import ParameterPanel from "./components/ParameterPanel";
 
 export default {
   name: 'App'
   ,
   components:{
+    ParameterPanel,
     HelixDisplay,
     FourierPanel
   },
   data: () => ({
-    valid: false,
-    radius_form: "",
-    radius: -1,
-    rise_form: "",
-    rise: -1,
-    frequency_form: "",
-    frequency: -1,
-    unit_size_form: "",
-    unit_size: -1,
-    numberRules: [v => !!v || 'parameter is required',],
+    helixFamily: [],
   }),
   methods: {
-    computeHelix() {
-      this.radius = Number(this.radius_form);
-      this.rise = Number(this.rise_form);
-      this.frequency = Number(this.frequency_form);
-      this.unit_size = Number(this.unit_size_form);
-    },
     loadExample() {
-      this.radius = this.radius_form = 10;
-      this.rise = this.rise_form = 0.9;
-      this.frequency = this.frequency_form = 13;
-      this.unit_size = this. unit_size_form = 2;
-    }
+      this.helixFamily = [ {'radius': 10, 'rise': 0.9, 'frequency': 13, 'unit_size': 2} ]
+    },
+  },
+  mounted() {
+    console.log('[ Loaded main component ]');
   }
 };
 </script>
