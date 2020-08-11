@@ -1,11 +1,43 @@
 <template>
     <div class="helix-display">
-        <div class="realspace-controls">Test</div>
+        <div v-show="helixFamily.length > 0" class="realspace-controls">
+            <v-tooltip top>
+                <template v-slot:activator="{ on }">
+                    <v-btn
+                            dark
+                            fab
+                            color="var(--primary)"
+                            @click="rotate = !rotate"
+                            v-on="on"
+                    >
+                        <v-icon v-if="rotate">mdi-pause</v-icon>
+                        <v-icon v-if="!rotate">mdi-play</v-icon>
+                    </v-btn>
+                </template>
+                <span>Toggle auto-rotation</span>
+            </v-tooltip>
+<!--            <v-tooltip top>-->
+<!--                <template v-slot:activator="{ on }">-->
+<!--                    <v-btn-->
+<!--                            dark-->
+<!--                            fab-->
+<!--                            color="var(&#45;&#45;primary)"-->
+<!--                            @click="rotate = !rotate"-->
+<!--                            v-on="on"-->
+<!--                    >-->
+<!--                        <v-icon v-if="fullscreen">mdi-fullscreen-exit</v-icon>-->
+<!--                        <v-icon v-if="!fullscreen">mdi-fullscreen</v-icon>-->
+<!--                    </v-btn>-->
+<!--                </template>-->
+<!--                <span>Fullscreen</span>-->
+<!--            </v-tooltip>-->
+        </div>
     </div>
 </template>
 
 <script>
     import * as THREE from '../../ext/three.module.js';
+    import OrbitControls from '../../ext/OrbitControls'
 
     export default {
         name: "HelixDisplay",
@@ -27,6 +59,8 @@
             scene: '',
             material: '',
             rotationRate: 0.01,
+            rotate: true,
+            fullscreen: false
         }),
         methods:{
             refreshHelix(){
@@ -56,8 +90,10 @@
                     for ( var i = 0; i < amount ; i ++ ) {
                         let object = new THREE.Mesh( geometry, this.material );
                         object.position.x = helix['radius'] * scalefac * Math.cos( i*2*Math.PI / helix['frequency'] );
+
                         object.position.y = helix['radius'] * scalefac * Math.sin( i*2*Math.PI / helix['frequency'] );
                         object.position.z = i*helix['rise'] * scalefac;
+                        console.log(object.position.z)
 
 
                         this.scene.add( object );
@@ -73,11 +109,11 @@
 
                 // set up the camera
                 THREE.Object3D.DefaultUp = new THREE.Vector3( 0,0,1);
-                let camera = new THREE.PerspectiveCamera( 40, containerinfo.width/containerinfo.height, 0.1, 15000 );
-                camera.position.z = 50;
+                let camera = new THREE.PerspectiveCamera( 40, containerinfo.width/containerinfo.height, 0.1, 5000 );
                 const cam_radius = 160;
-                camera.position.x = cam_radius;
-                let cam_angle = 0;  // initialise to 0
+                const cam_height = 50;
+
+                // let cam_angle = 0;  // initialise to 0
 
                 this.scene = new THREE.Scene();
 
@@ -90,6 +126,13 @@
                 renderer.setSize( containerinfo.width, containerinfo.height );
                 container.appendChild( renderer.domElement );
 
+                // further camera setup
+                let controls = new OrbitControls( camera, renderer.domElement );
+                controls.autoRotate = this.rotate;
+                controls.target.set( 0, 0, cam_height );
+                camera.position.set( cam_radius, 0, cam_height );
+                controls.update();
+
                 // function that is repeatedly automatically called
                 const animate = () => {
                     requestAnimationFrame( animate );
@@ -97,12 +140,10 @@
                 };
 
                 const render =  () => {
-                    camera.position.x = cam_radius*Math.cos(cam_angle);
-                    camera.position.y = cam_radius*Math.sin(cam_angle);
-                    cam_angle = cam_angle + this.rotationRate;
-
-                    camera.lookAt( new THREE.Vector3(0,0,50) );
+                    controls.update();
+                    controls.autoRotate = this.rotate;
                     renderer.render( this.scene, camera );
+                    camera.lookAt( new THREE.Vector3(0,0,cam_height) );
                 };
 
                 console.log('Realspace Helix display ready.');
@@ -124,7 +165,9 @@
     }
 
     .realspace-controls{
+        padding: 1rem;
         position: absolute;
+        width: 100%;
         bottom: 10px
     }
 </style>

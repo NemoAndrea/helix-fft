@@ -28,7 +28,7 @@
           </div>
         </div>
         <div class="layout-right"></div>
-        <footer >Twitter</footer>
+        <footer ><a href="https://twitter.com/cursed_tubule" target="_blank">Twitter </a></footer>
       </div>
     </v-main>
   </v-app>
@@ -183,5 +183,5 @@ export default {
     /*aspect-ratio: 1 / 1;*/
   }
 
-
+  a {text-decoration: none; color: var(--primary) !important;}
 </style>
