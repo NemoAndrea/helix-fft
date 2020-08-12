@@ -4,25 +4,43 @@
                 ref="form"
                 v-model="valid">
             <div v-for="(helix, index) in helixFamily" :key="index">
-                <div class="helix-number" @click="setInFocus(index + 1)">
-                    <div>helix {{index+1}}</div>
+                <div class="helix-header">
+                    <div class="helix-number" @click="setInFocus(index + 1)">
+                        <div>helix {{index+1}}</div>
+                        <div class="helix-button-box">
+                            <div v-if="index + 1 !==inputInFocus">
+                                <v-icon> mdi-chevron-down </v-icon>
+                            </div>
+                            <div v-if="index + 1 ===inputInFocus">
+                                <v-icon> mdi-chevron-up</v-icon>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-if="index + 1 ===inputInFocus" class="helix-button-box-focus">
+                        <div class="handedness-button">
+                            <v-tooltip bottom v-if="helix['handedness'] === 'right'">
+                                <template v-slot:activator="{ on }">
+                                    <v-icon v-on="on" @click="toggleHandedness(helix)"> mdi-axis-z-rotate-counterclockwise</v-icon>
+                                </template>
+                                <span>Make left-handed helix</span>
+                            </v-tooltip>
+                            <v-tooltip bottom v-if="helix['handedness'] === 'left'">
+                                <template v-slot:activator="{ on }">
+                                    <v-icon v-on="on" @click="toggleHandedness(helix)"> mdi-axis-z-rotate-clockwise</v-icon>
+                                </template>
+                                <span>Make right handed helix</span>
+                            </v-tooltip>
+                        </div>
+                        <div class="copy-button">
+                            <v-tooltip bottom>
+                                <template v-slot:activator="{ on }">
+                                    <v-icon v-on="on" @click="copyHelixParams(index)"> mdi-content-copy</v-icon>
+                                </template>
+                                <span>Copy params to new helix</span>
+                            </v-tooltip>
+                        </div>
 
-                <div class="helix-button-box">
-                    <div class="copybutton" v-if="index + 1 ===inputInFocus">
-                        <v-tooltip bottom>
-                            <template v-slot:activator="{ on }">
-                            <v-icon v-on="on" @click="copyHelixParams(index)"> mdi-content-copy</v-icon>
-                            </template>
-                            <span>Copy params to new helix</span>
-                        </v-tooltip>
                     </div>
-                    <div v-if="index + 1 !==inputInFocus">
-                        <v-icon> mdi-chevron-down </v-icon>
-                    </div>
-                    <div v-if="index + 1 ===inputInFocus">
-                        <v-icon> mdi-chevron-up</v-icon>
-                    </div>
-                </div>
                 </div>
                 <transition name="fade">
                     <div v-show="index+1 === inputInFocus">
@@ -149,7 +167,8 @@
             helixFamily: [],
             inputInFocus: 1,
             snackbar: false,
-            snackText: 'unspecified'
+            snackText: 'unspecified',
+            modelName: ''
         }),
         methods: {
             computeHelix() {
@@ -202,14 +221,19 @@
                     // add value to helix if it is a valid key (specified in default_params)
                     if ( validKeys.includes(key) ){
                         helix[key] = value
+                    } else if (key === 'name') {
+                        console.log('Baby has a name')
+                        this.$emit( 'updateName', value );  // this query model has a name. Update parent.
                     } else {
                         badKeys.push(key)
                     }
                 }
 
                 //show bad keys in snackbar
-                this.snackbar = true;
-                this.snackText = 'Some following invalid keys were ignored: ' + badKeys.join(', ');
+                if ( badKeys.length > 0 ) {
+                    this.snackbar = true;
+                    this.snackText = 'The following invalid keys were ignored: ' + badKeys.join(', ');
+                }
 
                 if (newHelixFamily.length > 0) {
                     // we are done parsing, let's send it over for calculation
@@ -224,11 +248,50 @@
             copyHelixParams(index){
                 console.log(`Copying parameters of helix ${index+1} into a new helix`);
                 this.helixFamily.push( {...this.helixFamily[index]} );
+                this.snackText = `Copied helix parameters from helix ${index+1}`;
+                this.snackbar = true;
+            },
+
+            toggleHandedness( helix ) {
+                if (helix['handedness'] === 'right') {
+                    helix['handedness'] = 'left';
+                } else if (helix['handedness'] === 'left') {
+                    helix['handedness'] = 'right';
+                }
+            },
+
+            exportModel(name) {
+                console.log('exporting with name ' + name);
+                let exportString = window.location.hostname;
+                exportString += '#';
+                if (name) { exportString += 'name=' + name}
+                for (let helix of this.helixFamily) {
+                    for ( const [key, value] of Object.entries( helix ) ) {
+                        if (exportString.slice(-1)!== '#') {  // prevent problems with first entry
+                            exportString += '&' + key + '=' + value
+                        } else {
+                            exportString += key + '=' + value
+                        }
+                    }
+                }
+
+                // copy to user clipboard
+                var dummy = document.createElement("textarea");
+                document.body.appendChild(dummy);
+                dummy.value = exportString;
+                dummy.select();
+                document.execCommand("copy");
+                document.body.removeChild(dummy);
+                console.log(exportString);
+
+                this.snackText = 'copied model URL to clipboard';
+                this.snackbar = true;
             }
         },
         mounted() {
             this.helixFamily.push(this.default_params);
             this.parseQueryString();
+
         }
     }
 </script>
@@ -257,8 +320,22 @@
         display: flex;
     }
 
-    .copybutton{
-        margin-right: 0.5rem;
+    .helix-header {
+        display: flex;
+    }
+
+    .helix-number{
+        width: auto;
+        flex-grow: 1
+    }
+
+    .helix-button-box-focus{
+        margin-left: 0.5rem;
+        display: flex;
+    }
+
+    .copy-button{
+        margin-left: 0.5rem;
     }
 
     .fade-enter-active {

@@ -6,14 +6,34 @@
         <div class="layout-left"><div class="rotated">Built by Nemo Andrea</div></div>
         <div class="layout-central">
           <div class="ui-box ui-command-panel">
-            <div v-ripple class="card card-accent elevation-3">
-              <div class="card-title">Metadata card</div>
+            <div class="card card-accent elevation-3">
+              <div class="card-title title-input">
+                <v-text-field
+                        label="Model name"
+                        v-model="modelName"
+                        dark
+                        dense
+                        color="white"
+                ></v-text-field>
+              </div>
+              <div class="meta-button-box">
               <v-btn outlined color="white" @click="loadExample()">Load example</v-btn>
-              <br>current helix-family parameters: {{helixFamily}}
+              <v-tooltip bottom>
+                <template v-slot:activator="{ on }">
+                  <v-btn icon color="white" v-on="on" @click="exportCurrentHelixFamily()">
+                    <v-icon>mdi-export-variant</v-icon>
+                  </v-btn>
+                </template>
+                <span>Export model to shareable URL in clipboard</span>
+              </v-tooltip>
             </div>
-            <div v-ripple class="card elevation-3">
+            </div>
+            <div class="card elevation-3">
               <div class="card-title">Helix parameters</div>
-              <parameter-panel v-on:updateHelixFamily="helixFamily = arguments[0]"/>
+              <parameter-panel
+                      v-on:updateHelixFamily="helixFamily = arguments[0]"
+                      v-on:updateName="modelName = arguments[0]"
+                      ref="paramPanel" />
             </div>
           </div>
           <div class="ui-box ui-realspace-panel"><div class="card card-webgl elevation-3">
@@ -21,8 +41,10 @@
             <helix-display :helixFamily="helixFamily" />
           </div></div>
           <div class="ui-box ui-fft-panel">
-            <div v-ripple class="card card-display elevation-3">Display Controls</div>
-            <div  v-ripple class="card card-fft elevation-3">FFT of helix (theory and computed)
+            <div class="card card-display elevation-3">Display Controls
+              <br>current helix-family parameters: {{helixFamily}}
+            </div>
+            <div class="card card-fft elevation-3">FFT of helix (theory and computed)
               <fourier-panel :helixFamily="helixFamily" />
             </div>
           </div>
@@ -49,11 +71,19 @@ export default {
   },
   data: () => ({
     helixFamily: [],
+    modelName: ''
   }),
   methods: {
     loadExample() {
-      this.helixFamily = [ {'radius': 10, 'rise': 0.9, 'frequency': 13, 'unit_size': 2} ]
+      window.location.hash += '#name=B-DNA&radius=1&rise=0.332&frequency=10.5&unit_size=0.2&offset=0' +
+              '&radius=1&rise=0.332&frequency=10.5&unit_size=0.2&offset=1.23&handedness=right';
+      location.reload()
     },
+
+    exportCurrentHelixFamily (){
+      // directly call method 'exportmode()' in ParameterPanel child (required ref to be defined in html above)
+      this.$refs.paramPanel.exportModel(this.modelName)
+    }
   },
   mounted() {
     console.log('[ Loaded main component ]');
@@ -184,6 +214,11 @@ export default {
   .card-fft{
     border-radius: 0;
     /*aspect-ratio: 1 / 1;*/
+  }
+
+  .meta-button-box{
+    display: flex;
+    justify-content: space-between;
   }
 
   a {text-decoration: none; color: var(--primary) !important;}

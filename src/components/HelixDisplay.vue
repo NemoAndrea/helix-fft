@@ -68,6 +68,15 @@
             camera: '',
             renderer: '',
             container: '',
+            colors: [
+                new THREE.Color(114/255, 147/255, 203/255),
+                new THREE.Color(204/255, 194/255, 16/255),
+                new THREE.Color(225/255, 151/255, 76/255),
+                new THREE.Color(132/255, 186/255, 91/255),
+                new THREE.Color(211/255, 94/255, 96/255),
+                new THREE.Color(128/255, 133/255, 133/255),
+                new THREE.Color(144/255, 103/255, 167/255)
+            ]
         }),
         methods:{
             refreshHelix(){
@@ -87,14 +96,22 @@
                 }
                 const scalefac = 10/max_radius;  // the prefactor is an empirical value and might need to be made more robust
 
+                // define handedness
+                let handedness = 1;  // right handed=1, left handed =-1
+
                 for ( let [ind, helix] of this.helixFamily.entries()) {
                     if (ind === 0) {  // if we have a single colour, use meshnormal type
                         this.material = new THREE.MeshNormalMaterial();
-                    } else {
-                        let color = new THREE.Color( 1-ind*0.3, 0.5 + ind*0.1, ind*0.3);
-                        this.material = new THREE.MeshBasicMaterial( {color: color});
+                    } else if (ind-1 < this.colors.length) {
+                        this.material = new THREE.MeshBasicMaterial( {color: this.colors[ind-1]});
                     }
 
+                    // set handedness for this helix
+                    if (helix['handedness'] === 'left') {
+                        handedness = -1;
+                    } else {
+                        handedness = 1;
+                    }
 
                     let amount = Math.ceil( 100 / ( helix['rise']*scalefac ) );  // number of helical units to draw
                     if (amount > 1000) { amount = 1000}
@@ -103,9 +120,8 @@
                     // build the helix
                     for ( var i = 0; i < amount ; i ++ ) {
                         let object = new THREE.Mesh( geometry, this.material );
-                        object.position.x = helix['radius'] * scalefac * Math.cos( i*2*Math.PI / helix['frequency'] );
-
-                        object.position.y = helix['radius'] * scalefac * Math.sin( i*2*Math.PI / helix['frequency'] );
+                        object.position.x = helix['radius'] * scalefac * Math.cos( handedness*i*2*Math.PI / helix['frequency'] );
+                        object.position.y = helix['radius'] * scalefac * Math.sin( handedness*i*2*Math.PI / helix['frequency'] );
                         object.position.z = i*helix['rise'] * scalefac + helix['offset']*scalefac;
 
                         this.scene.add( object );
