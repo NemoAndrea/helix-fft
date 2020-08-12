@@ -69,6 +69,19 @@
                                 suffix="nm"
                                 type="number"
                         ></v-text-field>
+
+                        <div v-show="index+1 > 1" class="optional-params">
+                            <v-text-field
+                                    v-model="helix['offset']"
+                                    :rules="numberAndZeroRules"
+                                    label="Helix Z offset"
+                                    outlined
+                                    required
+                                    color="var(--primary)"
+                                    suffix="nm"
+                                    type="number"
+                            ></v-text-field>
+                        </div>
                     </div>
                 </transition>
             </div>
@@ -101,6 +114,21 @@
                 </v-tooltip>
             </div>
         </v-form>
+        <v-snackbar
+                v-model="snackbar"
+        >
+            {{ snackText }}
+            <template v-slot:action="{ attrs }">
+                <v-btn
+                        color="pink"
+                        text
+                        v-bind="attrs"
+                        @click="snackbar = false"
+                >
+                    Close
+                </v-btn>
+            </template>
+        </v-snackbar>
     </div>
 </template>
 
@@ -113,8 +141,15 @@
                 v => !!v || 'parameter is required',
                 v => v > 0 || 'value must be larger than 0',
             ],
-            helixFamily: [{'radius':'', 'rise': '', 'frequency': '', 'unit_size': ''}],
-            inputInFocus: 1
+            numberAndZeroRules: [
+                v => !!v || 'parameter is required',
+                v => v >= 0 || 'value must be larger or equal to 0',
+            ],
+            default_params: {'radius':'', 'rise': '', 'frequency': '', 'unit_size': '', 'offset': '0', 'handedness': 'right'},
+            helixFamily: [],
+            inputInFocus: 1,
+            snackbar: false,
+            snackText: 'unspecified'
         }),
         methods: {
             computeHelix() {
@@ -136,7 +171,7 @@
 
             newHelix() {
                 // add a new helix to the family (will expose new form options)
-                this.helixFamily.push( {'radius':'', 'rise': '', 'frequency': '', 'unit_size': ''} )
+                this.helixFamily.push( this.default_params )
             },
 
             setInFocus( helix_number ) {
@@ -153,16 +188,28 @@
 
                 let newHelixFamily =[];
                 let helix = {};
+                const validKeys = Object.keys(this.default_params);
+                let badKeys = [];
 
                 for ( let [key, value] of searchParams ) {
                     key = key.replace( '#','' );  // remove the # from the parameter (only needed for the first key)
 
                     if ( key === 'radius' ) {  // we assume that the previous helix was specified if we add new radius
-                        newHelixFamily.push( {} );  // add a new helix object
+                        newHelixFamily.push( {...this.default_params});  // add a new helix object
                         helix = newHelixFamily[newHelixFamily.length -1];  // get the last helix object from family
                     }
-                    helix[key] =  value
+
+                    // add value to helix if it is a valid key (specified in default_params)
+                    if ( validKeys.includes(key) ){
+                        helix[key] = value
+                    } else {
+                        badKeys.push(key)
+                    }
                 }
+
+                //show bad keys in snackbar
+                this.snackbar = true;
+                this.snackText = 'Some following invalid keys were ignored: ' + badKeys.join(', ');
 
                 if (newHelixFamily.length > 0) {
                     // we are done parsing, let's send it over for calculation
@@ -180,6 +227,7 @@
             }
         },
         mounted() {
+            this.helixFamily.push(this.default_params);
             this.parseQueryString();
         }
     }

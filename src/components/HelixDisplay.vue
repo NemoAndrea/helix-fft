@@ -88,7 +88,7 @@
                 const scalefac = 10/max_radius;  // the prefactor is an empirical value and might need to be made more robust
 
                 for ( let [ind, helix] of this.helixFamily.entries()) {
-                    if (ind === 1) {  // if we have a single colour, use meshnormal type
+                    if (ind === 0) {  // if we have a single colour, use meshnormal type
                         this.material = new THREE.MeshNormalMaterial();
                     } else {
                         let color = new THREE.Color( 1-ind*0.3, 0.5 + ind*0.1, ind*0.3);
@@ -106,7 +106,7 @@
                         object.position.x = helix['radius'] * scalefac * Math.cos( i*2*Math.PI / helix['frequency'] );
 
                         object.position.y = helix['radius'] * scalefac * Math.sin( i*2*Math.PI / helix['frequency'] );
-                        object.position.z = i*helix['rise'] * scalefac;
+                        object.position.z = i*helix['rise'] * scalefac + helix['offset']*scalefac;
 
                         this.scene.add( object );
                     }
