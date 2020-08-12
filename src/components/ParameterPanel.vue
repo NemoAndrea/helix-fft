@@ -6,6 +6,16 @@
             <div v-for="(helix, index) in helixFamily" :key="index">
                 <div class="helix-number" @click="setInFocus(index + 1)">
                     <div>helix {{index+1}}</div>
+
+                <div class="helix-button-box">
+                    <div class="copybutton" v-if="index + 1 ===inputInFocus">
+                        <v-tooltip bottom>
+                            <template v-slot:activator="{ on }">
+                            <v-icon v-on="on" @click="copyHelixParams(index)"> mdi-content-copy</v-icon>
+                            </template>
+                            <span>Copy params to new helix</span>
+                        </v-tooltip>
+                    </div>
                     <div v-if="index + 1 !==inputInFocus">
                         <v-icon> mdi-chevron-down </v-icon>
                     </div>
@@ -13,52 +23,53 @@
                         <v-icon> mdi-chevron-up</v-icon>
                     </div>
                 </div>
+                </div>
                 <transition name="fade">
                     <div v-show="index+1 === inputInFocus">
-                    <v-text-field
-                            v-model="helix['radius']"
-                            :rules="numberRules"
-                            label="Radius"
-                            required
-                            outlined
-                            color="var(--primary)"
-                            suffix="nm"
-                            type="number"
-                    ></v-text-field>
+                        <v-text-field
+                                v-model="helix['radius']"
+                                :rules="numberRules"
+                                label="Radius"
+                                required
+                                outlined
+                                color="var(--primary)"
+                                suffix="nm"
+                                type="number"
+                        ></v-text-field>
 
-                    <v-text-field
-                            v-model="helix['rise']"
-                            :rules="numberRules"
-                            label="Rise"
-                            required
-                            outlined
-                            color="var(--primary)"
-                            suffix="nm"
-                            type="number"
-                    ></v-text-field>
+                        <v-text-field
+                                v-model="helix['rise']"
+                                :rules="numberRules"
+                                label="Rise"
+                                required
+                                outlined
+                                color="var(--primary)"
+                                suffix="nm"
+                                type="number"
+                        ></v-text-field>
 
-                    <v-text-field
-                            v-model="helix['frequency']"
-                            :rules="numberRules"
-                            label="Subunits per pitch"
-                            required
-                            outlined
-                            color="var(--primary)"
-                            suffix="nm"
-                            type="number"
-                    ></v-text-field>
+                        <v-text-field
+                                v-model="helix['frequency']"
+                                :rules="numberRules"
+                                label="Subunits per pitch"
+                                required
+                                outlined
+                                color="var(--primary)"
+                                suffix="nm"
+                                type="number"
+                        ></v-text-field>
 
-                    <v-text-field
-                            v-model="helix['unit_size']"
-                            :rules="numberRules"
-                            label="Unit size"
-                            required
-                            outlined
-                            color="var(--primary)"
-                            suffix="nm"
-                            type="number"
-                    ></v-text-field>
-                </div>
+                        <v-text-field
+                                v-model="helix['unit_size']"
+                                :rules="numberRules"
+                                label="Unit size"
+                                required
+                                outlined
+                                color="var(--primary)"
+                                suffix="nm"
+                                type="number"
+                        ></v-text-field>
+                    </div>
                 </transition>
             </div>
             <div class="button-box">
@@ -98,20 +109,21 @@
         name: "ParameterPanel",
         data: () => ({
             valid: false,
-            numberRules: [v => !!v || 'parameter is required',],
+            numberRules: [
+                v => !!v || 'parameter is required',
+                v => v > 0 || 'value must be larger than 0',
+            ],
             helixFamily: [{'radius':'', 'rise': '', 'frequency': '', 'unit_size': ''}],
             inputInFocus: 1
         }),
         methods: {
             computeHelix() {
                 // first we make the string input to numeric
-                let helix;
-                for (helix of this.helixFamily) {
+                for (let helix of this.helixFamily) {
                     helix['radius'] = Number(helix['radius']);
                     helix['rise'] =  Number(helix['rise']);
                     helix['frequency'] =  Number(helix['frequency']);
                     helix['unit_size'] =  Number(helix['unit_size']);
-
                 }
                 // then we send it off to the rest of the application
                 this.sendHelixFamily()
@@ -160,6 +172,11 @@
                 } else {
                     console.log('No query string parsed.')
                 }
+            },
+
+            copyHelixParams(index){
+                console.log(`Copying parameters of helix ${index+1} into a new helix`);
+                this.helixFamily.push( {...this.helixFamily[index]} );
             }
         },
         mounted() {
@@ -182,6 +199,18 @@
         display: flex;
         justify-content: space-between;
         vertical-align: middle;
+    }
+
+    .helix-button-box{
+       display: flex;
+    }
+
+    v-icon.helix-button-box{
+        display: flex;
+    }
+
+    .copybutton{
+        margin-right: 0.5rem;
     }
 
     .fade-enter-active {

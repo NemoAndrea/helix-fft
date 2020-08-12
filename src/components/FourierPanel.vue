@@ -24,10 +24,10 @@ import { toImageArray, fft_analytic }  from '../utils/fft_tools.js'
         }),
         methods:{
             updateRaster(){
-                let helix = {};
-                for (helix of this.helixFamily) {  // STILL NEEDS TO BE IMPLEMENTED FOR MULTIPLE HELICES
+                for (let helix of this.helixFamily) {  // STILL NEEDS TO BE IMPLEMENTED FOR MULTIPLE HELICES
                     this.analyticFFT = fft_analytic( helix['radius'], helix['rise'], helix['frequency'],
                         helix['unit_size'], this.rasterSize, 3, 1, 0.001 );
+
                 }
                 let idata = this.ctx.createImageData( this.rasterSize, this.rasterSize );
                 toImageArray( this.analyticFFT, idata, 0.3 );
@@ -38,7 +38,7 @@ import { toImageArray, fft_analytic }  from '../utils/fft_tools.js'
                 let imgel = document.querySelector( '.rasterImage' ).appendChild( image );
                 imgel.style.width = '100%';
             }
-         },
+        },
         mounted() {
             this.canvas = document.createElement( 'canvas' );
             this.canvas.width = this.rasterSize;

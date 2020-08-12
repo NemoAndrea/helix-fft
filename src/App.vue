@@ -159,6 +159,7 @@ export default {
     padding: 0.6rem;
     position: absolute;
     font-weight: bold;
+    z-index: 2;
   }
 
   .card-accent{
@@ -168,10 +169,12 @@ export default {
   }
 
   .card-webgl{
-    border-radius: 7px 7px 7px 7px;
+    border-radius: 9px;
     height: 100%;
     padding: 0;
     position: relative;
+    overflow: hidden;
+
   }
 
   .card-display{

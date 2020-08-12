@@ -1,6 +1,8 @@
 <template>
     <div class="helix-display">
         <div v-show="helixFamily.length > 0" class="realspace-controls">
+            <div>
+
             <v-tooltip top>
                 <template v-slot:activator="{ on }">
                     <v-btn
@@ -16,21 +18,24 @@
                 </template>
                 <span>Toggle auto-rotation</span>
             </v-tooltip>
-<!--            <v-tooltip top>-->
-<!--                <template v-slot:activator="{ on }">-->
-<!--                    <v-btn-->
-<!--                            dark-->
-<!--                            fab-->
-<!--                            color="var(&#45;&#45;primary)"-->
-<!--                            @click="rotate = !rotate"-->
-<!--                            v-on="on"-->
-<!--                    >-->
-<!--                        <v-icon v-if="fullscreen">mdi-fullscreen-exit</v-icon>-->
-<!--                        <v-icon v-if="!fullscreen">mdi-fullscreen</v-icon>-->
-<!--                    </v-btn>-->
-<!--                </template>-->
-<!--                <span>Fullscreen</span>-->
-<!--            </v-tooltip>-->
+            </div>
+            <div>
+            <v-tooltip top>
+                <template v-slot:activator="{ on }">
+                    <v-btn
+                            dark
+                            fab
+                            color="var(--primary)"
+                            @click="toggleFullscreen"
+                            v-on="on"
+                    >
+                        <v-icon v-if="fullscreen">mdi-fullscreen-exit</v-icon>
+                        <v-icon v-if="!fullscreen">mdi-fullscreen</v-icon>
+                    </v-btn>
+                </template>
+                <span>Fullscreen</span>
+            </v-tooltip>
+            </div>
         </div>
     </div>
 </template>
@@ -57,10 +62,12 @@
         },
         data: () => ({
             scene: '',
-            material: '',
             rotationRate: 0.01,
             rotate: true,
-            fullscreen: false
+            fullscreen: false,
+            camera: '',
+            renderer: '',
+            container: '',
         }),
         methods:{
             refreshHelix(){
@@ -71,19 +78,26 @@
                     this.scene.remove(this.scene.children[0]);
                 }
 
-                let helix = {};
-
                 // compute relevant scale to draw helix at
                 let max_radius=this.helixFamily[0]['radius'];
-                for (helix of this.helixFamily) {
+                for (let helix of this.helixFamily) {
                     if ( 1/helix['radius'] < 1/max_radius ){
                         max_radius = helix['radius']
                     }
                 }
                 const scalefac = 10/max_radius;  // the prefactor is an empirical value and might need to be made more robust
 
-                for (helix of this.helixFamily) {
-                    const amount = Math.ceil( 100 / ( helix['rise']*scalefac ) );  // number of helical units to draw
+                for ( let [ind, helix] of this.helixFamily.entries()) {
+                    if (ind === 1) {  // if we have a single colour, use meshnormal type
+                        this.material = new THREE.MeshNormalMaterial();
+                    } else {
+                        let color = new THREE.Color( 1-ind*0.3, 0.5 + ind*0.1, ind*0.3);
+                        this.material = new THREE.MeshBasicMaterial( {color: color});
+                    }
+
+
+                    let amount = Math.ceil( 100 / ( helix['rise']*scalefac ) );  // number of helical units to draw
+                    if (amount > 1000) { amount = 1000}
                     let geometry = new THREE.SphereGeometry( helix['unit_size']*scalefac, 12,12 );
 
                     // build the helix
@@ -93,45 +107,45 @@
 
                         object.position.y = helix['radius'] * scalefac * Math.sin( i*2*Math.PI / helix['frequency'] );
                         object.position.z = i*helix['rise'] * scalefac;
-                        console.log(object.position.z)
-
 
                         this.scene.add( object );
                     }
                 }
-
+                this.refreshDisplay( this.container )
             },
 
-            setupDisplay(){
+            setupDisplay(element_name){
                 // get the div we will draw in
-                let container = document.querySelector('.helix-display' );
-                let containerinfo = container.getBoundingClientRect();
+                this.container = document.querySelector( element_name );
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color( 0xececec );
+
+                let light = new THREE.AmbientLight( 0xffffff ); // soft white light
+                this.scene.add( light );
+
+                // setup render window
+                this.renderer = new THREE.WebGLRenderer( { antialias: true} );
+                this.renderer.setPixelRatio( window.devicePixelRatio );
+                this.renderer.setSize( this.container.offsetWidth , this.container.offsetHeight );
+                let GLwindow = this.container.appendChild( this.renderer.domElement );
+                GLwindow.style.display = 'block' // really important to prevent ghost whitespace below canvas
 
                 // set up the camera
                 THREE.Object3D.DefaultUp = new THREE.Vector3( 0,0,1);
-                let camera = new THREE.PerspectiveCamera( 40, containerinfo.width/containerinfo.height, 0.1, 5000 );
+                this.camera = new THREE.PerspectiveCamera( 40, this.container.offsetWidth/this.container.offsetHeight,
+                    0.1, 5000 );
                 const cam_radius = 160;
                 const cam_height = 50;
 
-                // let cam_angle = 0;  // initialise to 0
-
-                this.scene = new THREE.Scene();
-
-                // set up helical building blocks
-                this.material = new THREE.MeshNormalMaterial();
-
-                // setup render window
-                let renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true} );
-                renderer.setPixelRatio( window.devicePixelRatio );
-                renderer.setSize( containerinfo.width, containerinfo.height );
-                container.appendChild( renderer.domElement );
-
                 // further camera setup
-                let controls = new OrbitControls( camera, renderer.domElement );
+                let controls = new OrbitControls( this.camera, this.renderer.domElement );
                 controls.autoRotate = this.rotate;
                 controls.target.set( 0, 0, cam_height );
-                camera.position.set( cam_radius, 0, cam_height );
+                this.camera.position.set( cam_radius, 0, cam_height );
+                controls.enableKeys = false;
                 controls.update();
+
+                window.addEventListener( 'resize', () => this.refreshDisplay( this.container ), false );  // detect if page resize
 
                 // function that is repeatedly automatically called
                 const animate = () => {
@@ -142,17 +156,41 @@
                 const render =  () => {
                     controls.update();
                     controls.autoRotate = this.rotate;
-                    renderer.render( this.scene, camera );
-                    camera.lookAt( new THREE.Vector3(0,0,cam_height) );
+                    this.renderer.render( this.scene, this.camera );
+                    this.camera.lookAt( new THREE.Vector3(0,0,cam_height) );
                 };
 
                 console.log('Realspace Helix display ready.');
                 animate()
+            },
 
+            refreshDisplay(container) {
+                //console.log('Refreshing aspect ratio plot');
+                this.camera.aspect = container.offsetWidth / container.clientHeight ;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize( container.offsetWidth, container.clientHeight  );
+
+            },
+
+            toggleFullscreen(){
+                this.fullscreen = !this.fullscreen;
+
+                let card = document.querySelector( '.ui-realspace-panel' );
+
+                if (this.fullscreen) {
+                    console.log('going fullscreen, baby');
+                    card.style.position = 'absolute';
+                    card.style.width = '90vw';
+                } else {
+                    console.log('leaving fullscreen');
+                    card.style.position = 'static';
+                    card.style.width = '0px';
+                }
+                this.refreshDisplay(this.container)
             }
         },
         mounted() {
-            this.setupDisplay()
+            this.setupDisplay( '.helix-display' )
         }
     }
 </script>
@@ -162,11 +200,14 @@
         height: 100%;
         width: 100%;
         position: relative;
+        z-index: 1;
     }
 
     .realspace-controls{
         padding: 1rem;
         position: absolute;
+        display: flex;
+        justify-content: space-between;
         width: 100%;
         bottom: 10px
     }
