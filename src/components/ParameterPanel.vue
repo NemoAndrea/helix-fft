@@ -73,7 +73,6 @@
                                 required
                                 outlined
                                 color="var(--primary)"
-                                suffix="nm"
                                 type="number"
                         ></v-text-field>
 

@@ -13,6 +13,7 @@
                         hide-details
                         class="align-center"
                         color="var(--primary)"
+                        track-color="darkgrey"
                         @end="updateContrast"
                 />
                 <v-slider class="ma-0 pa-0"
@@ -22,6 +23,7 @@
                           :max=128
                           :min=-128
                           color="var(--primary)"
+                          track-color="darkgrey"
                           @end="updateContrast"
                 />
 
@@ -121,6 +123,8 @@ import { toImageArray, toImageArray2, fft_analytic }  from '../utils/fft_tools.j
                 // set and display image data
                 this.ctx.putImageData( idata, 0, 0 );
                 this.image.src = this.canvas.toDataURL(); // update the src of the existing image
+
+                this.updateContrast()  // make sure to apply existing contrast
             },
 
 

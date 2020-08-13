@@ -27,6 +27,7 @@
                 <span>Export model to shareable URL in clipboard</span>
               </v-tooltip>
             </div>
+              <button @click="greet" style="background: lightcyan; color: black; padding: 5px">Test WASM</button>
             </div>
             <div class="card elevation-3">
               <div class="card-title">Helix parameters</div>
@@ -92,7 +93,13 @@ export default {
     exportCurrentHelixFamily (){
       // directly call method 'exportmode()' in ParameterPanel child (required ref to be defined in html above)
       this.$refs.paramPanel.exportModel(this.modelName)
-    }
+    },
+
+    async greet() {
+      const wasm = import("../wasm/pkg");
+      const greet = (await wasm).greet;
+      greet('banana');
+    },
   },
   mounted() {
     console.log('[ Loaded main component ]');

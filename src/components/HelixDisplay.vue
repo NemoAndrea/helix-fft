@@ -176,7 +176,7 @@
                     this.camera.lookAt( new THREE.Vector3(0,0,cam_height) );
                 };
 
-                console.log('Realspace Helix display ready.');
+                console.log('[ Realspace Helix display ready. ]');
                 animate()
             },
 

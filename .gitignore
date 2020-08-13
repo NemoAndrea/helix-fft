@@ -1,3 +1,9 @@
+# helix-FFT specific ignores
+wasm/target
+wasm/pkg
+
+
+
 .DS_Store
 node_modules
 /dist
