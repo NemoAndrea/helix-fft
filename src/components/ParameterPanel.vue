@@ -123,7 +123,7 @@
                         <v-btn
                                 :disabled="!valid"
                                 color="var(--primary)"
-                                @click="computeHelix"
+                                @click="computeHelix(true)"
                                 v-on="on">
                             Compute
                         </v-btn>
@@ -171,7 +171,7 @@
             modelName: ''
         }),
         methods: {
-            computeHelix() {
+            computeHelix(compute) {
                 // first we make the string input to numeric
                 for (let helix of this.helixFamily) {
                     helix['radius'] = Number(helix['radius']);
@@ -180,12 +180,17 @@
                     helix['unit_size'] =  Number(helix['unit_size']);
                 }
                 // then we send it off to the rest of the application
-                this.sendHelixFamily()
+                this.sendHelixFamily();
+                if (compute) { this.computeHelixFamily() }
             },
 
             sendHelixFamily() {
                 console.log('Sending new helix-family off for computation');
                 this.$emit( 'updateHelixFamily', [...this.helixFamily] )
+            },
+
+            computeHelixFamily() {
+                this.$emit( 'computeHelixFamily' )
             },
 
             newHelix() {
@@ -239,7 +244,7 @@
                     // we are done parsing, let's send it over for calculation
                     console.log(`query string loaded for: ${newHelixFamily.length} helix objects`);
                     this.helixFamily = newHelixFamily;
-                    this.computeHelix()
+                    this.computeHelix(false)  // update values, but do not compute FFT to prevent loading lag
                 } else {
                     console.log('No query string parsed.')
                 }

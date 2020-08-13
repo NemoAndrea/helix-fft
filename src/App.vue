@@ -31,7 +31,8 @@
             <div class="card elevation-3">
               <div class="card-title">Helix parameters</div>
               <parameter-panel
-                      v-on:updateHelixFamily="helixFamily = arguments[0]"
+                      v-on:updateHelixFamily="setHelixFamily($event)"
+                      v-on:computeHelixFamily="computeHelixFamily()"
                       v-on:updateName="modelName = arguments[0]"
                       ref="paramPanel" />
             </div>
@@ -41,12 +42,10 @@
             <helix-display :helixFamily="helixFamily" />
           </div></div>
           <div class="ui-box ui-fft-panel">
-            <div class="card card-display elevation-3">Display Controls
-              <br>current helix-family parameters: {{helixFamily}}
-            </div>
-            <div class="card card-fft elevation-3">FFT of helix (theory and computed)
-              <fourier-panel :helixFamily="helixFamily" />
-            </div>
+              <fourier-panel
+                      :helixFamily="helixFamily"
+                      :updateCounter="updateCounter"
+                />
           </div>
         </div>
         <div class="layout-right"></div>
@@ -71,13 +70,23 @@ export default {
   },
   data: () => ({
     helixFamily: [],
-    modelName: ''
+    modelName: '',
+    updateCounter: 0
   }),
   methods: {
     loadExample() {
       window.location.hash += '#name=B-DNA&radius=1&rise=0.332&frequency=10.5&unit_size=0.2&offset=0' +
               '&radius=1&rise=0.332&frequency=10.5&unit_size=0.2&offset=1.23&handedness=right';
       location.reload()
+    },
+
+    setHelixFamily (newHelixFamily) {
+      this.helixFamily = newHelixFamily;
+    },
+
+    computeHelixFamily () {
+      this.updateCounter ++;  // log how many times we have computed FFT. Triggers calculation in FourierPanel.
+      console.log(`>> We have computed ${this.updateCounter} FFTs `)
     },
 
     exportCurrentHelixFamily (){
@@ -153,7 +162,7 @@ export default {
   .ui-command-panel{
     display: grid;
     grid-template-rows: auto 1fr;
-    flex: 0 1 24rem;
+    flex: 0 1 26rem;
   }
 
   .ui-realspace-panel{
@@ -161,9 +170,7 @@ export default {
   }
 
   .ui-fft-panel{
-    display: grid;
-    grid-template-rows: 1fr auto;
-    flex: 0 1 40rem;
+    flex: 0 1 38rem;
   }
 
   .rotated{
@@ -212,7 +219,8 @@ export default {
   }
 
   .card-fft{
-    border-radius: 0;
+    border-radius: 9px;
+    padding-bottom: 0.5rem;
     /*aspect-ratio: 1 / 1;*/
   }
 
