@@ -1,6 +1,7 @@
 import { identity, multiply, subset, index, max, min, subtract, zeros, range, exp, complex, add, squeeze, square, abs} from '../../ext/math.min.js'
 import { besselj } from '../../ext/bessel'
 
+// legacy, moved to webassembly
 export function fft_analytic(radius, rise, frequency, unit_size, rastersize, n_range=10, m_range=1, scale=0.003) {
     let raw_image = zeros(rastersize, rastersize);
     const coord = range(-rastersize/2, rastersize/2);
@@ -120,4 +121,13 @@ export function toImageArray2(data,size=512 , maximum=-1){
 
     console.log('finished conversion');
     return ImageData
+}
+
+export function toIntArr( idata ) {
+    console.log('size of idata to int is ' + idata.length);
+    let out =new Uint8Array( idata.length );
+    for (let i = 0; i < idata.length; i += 1) {
+        out[i] = idata[i]
+    }
+    return out
 }

@@ -26,7 +26,7 @@
                           track-color="darkgrey"
                           @end="updateContrast"
                 />
-
+                <button @click="updateFFT_old" style="background: lightcyan; color: black; padding: 5px; margin: 5px">legacy FFT calculation</button>
             </div>
         </div>
         <div class="card card-fft elevation-3">
@@ -66,7 +66,7 @@
 
 <script>
     // eslint-disable-next-line no-unused-vars
-import { toImageArray, toImageArray2, fft_analytic }  from '../utils/fft_tools.js'
+import { toImageArray, toImageArray2, fft_analytic, toIntArr }  from '../utils/fft_tools.js'
 
     export default {
         name: "FourierPanel",
@@ -90,7 +90,7 @@ import { toImageArray, toImageArray2, fft_analytic }  from '../utils/fft_tools.j
         data: () => ({
             analyticFFT: '',
             n_order: 6,
-            n_order_list: [1,2,3,4,5,6,7,8,9,10,11],  // allowed values for n
+            n_order_list: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],  // allowed values for n
             m_order: 1,
             m_order_list: [1,2,3,4,5,6,7],   // allowed values for +- m
             canvas: '',
@@ -101,10 +101,14 @@ import { toImageArray, toImageArray2, fft_analytic }  from '../utils/fft_tools.j
             scene: '',
             contrast: { 'range':[0, 255], 'contrast':1, 'offset':0 },
             imageData: [],
-            image: ''
+            imageDataTest: [],
+            image: '',
+            wasm: '',
+            wasm_contrast: '',
+            wasm_fft_analytic: ''
         }),
         methods: {
-            updateFFT(){
+            updateFFT_old(){
                 console.time('ana-fft');
                 for (let helix of this.helixFamily) {  // STILL NEEDS TO BE IMPLEMENTED FOR MULTIPLE HELICES
                     this.analyticFFT = fft_analytic( helix['radius'], helix['rise'], helix['frequency'],
@@ -119,35 +123,45 @@ import { toImageArray, toImageArray2, fft_analytic }  from '../utils/fft_tools.j
 
                 // save the raw image data to a variable as reference for contrast adjustment
                 this.imageData = idata.data;
+                this.imageDataTest = toIntArr(this.imageData);
 
                 // set and display image data
                 this.ctx.putImageData( idata, 0, 0 );
                 this.image.src = this.canvas.toDataURL(); // update the src of the existing image
 
-                this.updateContrast()  // make sure to apply existing contrast
+                this.updateContrast();  // make sure to apply existing contrast
             },
 
+            updateFFT(){
+                let apple;
+                console.time('FFT-analytic-wasm');  //
+                apple = this.wasm_fft_analytic( this.helixFamily, this.n_order, this.m_order, 0.01, this.rasterSize);
 
-            // it might be good to eventually move this to webassembly; runtime is about 150ms in js.
-            updateContrast() {
-                console.log('New contrast set!')
-
-                console.time('contrast');
-                let idata = this.ctx.getImageData( 0,0,this.rasterSize, this.rasterSize );
-                let data = idata.data;
-
-                // map the old image to new values
-                let valRange = 255 / ( this.contrast['range'][1] - this.contrast['range'][0] );
-                for (let j = 0; j < this.imageData.length; j+=4) {
-                    data[j]   =  (this.imageData[j]   - this.contrast['range'][0]) * valRange + this.contrast['offset'];
-                    data[j+1] =  (this.imageData[j+1] - this.contrast['range'][0]) * valRange + this.contrast['offset'];
-                    data[j+2] =  (this.imageData[j+2] - this.contrast['range'][0]) * valRange + this.contrast['offset'];
-                    // we do not change the alpha
-                }
-
-                this.ctx.putImageData( idata, 0, 0 );
+                let newImageData = new ImageData(Uint8ClampedArray.from(apple), this.rasterSize, this.rasterSize);
+                this.ctx.putImageData( newImageData, 0, 0 );
                 this.image.src = this.canvas.toDataURL(); // produces a PNG file
-                console.timeEnd('contrast');
+
+                console.timeEnd('FFT-analytic-wasm');
+                this.imageDataTest = apple
+                this.updateContrast();  // make sure to apply existing contrast
+            },
+
+            updateContrast() {
+                console.time('contrast-wasm');
+                const newdata = this.wasm_contrast(this.imageDataTest, this.contrast['offset'] ,this.contrast['range'][0], this.contrast['range'][1]);
+
+                // convert types
+                let newDataClamped = Uint8ClampedArray.from(newdata);
+                let newImageData = new ImageData(newDataClamped, this.rasterSize, this.rasterSize);
+
+                this.ctx.putImageData( newImageData, 0, 0 );
+                this.image.src = this.canvas.toDataURL(); // produces a PNG file
+                console.timeEnd('contrast-wasm');
+            },
+
+            async loadWASMfuncs (){
+                this.wasm_contrast = (await this.wasm).set_contrast;
+                this.wasm_fft_analytic = (await this.wasm).FFT_analytic;
             },
         },
         mounted() {
@@ -155,6 +169,12 @@ import { toImageArray, toImageArray2, fft_analytic }  from '../utils/fft_tools.j
             this.canvas.width = this.rasterSize;
             this.canvas.height = this.rasterSize;
             this.ctx = this.canvas.getContext( '2d' );
+
+            this.wasm = import("../../wasm/pkg");
+
+            this.imageDataTest = new Uint8Array( 4 * this.rasterSize * this.rasterSize );
+
+            this.loadWASMfuncs();
 
             // actually attach an image object to canvas.
             this.image = new Image();

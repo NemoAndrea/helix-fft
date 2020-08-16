@@ -172,12 +172,12 @@
         methods: {
             computeHelix(compute) {
                 // first we make the string input to numeric
-                for (let helix of this.helixFamily) {
-                    helix['radius'] = Number(helix['radius']);
-                    helix['rise'] =  Number(helix['rise']);
-                    helix['frequency'] =  Number(helix['frequency']);
-                    helix['unit_size'] =  Number(helix['unit_size']);
-                }
+                // for (let helix of this.helixFamily) {
+                //     helix['radius'] = Number(helix['radius']);
+                //     helix['rise'] =  Number(helix['rise']);
+                //     helix['frequency'] =  Number(helix['frequency']);
+                //     helix['unit_size'] =  Number(helix['unit_size']);
+                // }
                 // then we send it off to the rest of the application
                 this.sendHelixFamily();
                 if (compute) { this.computeHelixFamily() }
