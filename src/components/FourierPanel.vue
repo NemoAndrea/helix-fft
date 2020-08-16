@@ -1,6 +1,6 @@
 <template>
     <div class="ui-fft-panel-sub">
-        <div class="card card-display elevation-3">
+        <div class="card card-display">
 
             <div class="card-title">Display Controls (FFT contrast)</div>
             <div>
@@ -26,10 +26,13 @@
                           track-color="darkgrey"
                           @end="updateContrast"
                 />
+
+
                 <button @click="updateFFT_old" style="background: lightcyan; color: black; padding: 5px; margin: 5px">legacy FFT calculation</button>
+                <button @click="update_plot_scale(true)" style="background: lightcyan; color: black; padding: 5px; margin: 5px">Auto Scale FFT plot</button>
             </div>
         </div>
-        <div class="card card-fft elevation-3">
+        <div class="card card-fft">
             <div class="fft-card-header">
                 <div class="card-title">FFT of helix (analytic solution)</div>
                 <div class="order-dropdown-container">
@@ -82,20 +85,25 @@ import { toImageArray, toImageArray2, fft_analytic, toIntArr }  from '../utils/f
         watch: {
             // eslint-disable-next-line no-unused-vars
             updateCounter: {
-                handler: function () {
-                    this.updateFFT()
-                }
+                handler: function () { this.updateFFT( false) }
+            },
+            n_order: {
+                handler: function () { this.updateFFT( false ) }
+            },
+            m_order: {
+                handler: function () { this.updateFFT( false ) }
             },
         },
         data: () => ({
             analyticFFT: '',
-            n_order: 6,
-            n_order_list: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],  // allowed values for n
-            m_order: 1,
-            m_order_list: [1,2,3,4,5,6,7],   // allowed values for +- m
+            n_order: 5,
+            n_order_list: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],  // allowed values for n
+            m_order: 0,
+            m_order_list: [0,1,2,3,4,5,6,7],   // allowed values for +- m
             canvas: '',
             ctx: '',
             rasterSize: 512,
+            plot_scale: 0.01,
             camera: '',
             container: '',
             scene: '',
@@ -109,10 +117,11 @@ import { toImageArray, toImageArray2, fft_analytic, toIntArr }  from '../utils/f
         }),
         methods: {
             updateFFT_old(){
+                this.update_plot_scale(false);
                 console.time('ana-fft');
                 for (let helix of this.helixFamily) {  // STILL NEEDS TO BE IMPLEMENTED FOR MULTIPLE HELICES
                     this.analyticFFT = fft_analytic( helix['radius'], helix['rise'], helix['frequency'],
-                        helix['unit_size'], this.rasterSize, this.n_order, this.m_order, 0.01 );
+                        helix['unit_size'], this.rasterSize, this.n_order+1, this.m_order+1, this.plot_scale );
                     break  // for now, until analyticFFT is fixed
                 }
                 console.timeEnd('ana-fft');
@@ -127,23 +136,33 @@ import { toImageArray, toImageArray2, fft_analytic, toIntArr }  from '../utils/f
 
                 // set and display image data
                 this.ctx.putImageData( idata, 0, 0 );
-                this.image.src = this.canvas.toDataURL(); // update the src of the existing image
+                this.image.style.backgroundImage = "url(" + this.canvas.toDataURL() + ")";
 
                 this.updateContrast();  // make sure to apply existing contrast
             },
 
-            updateFFT(){
-                let apple;
+            updateFFT( autoscale ){
+                if (autoscale) { this.update_plot_scale(false) }
+
+                let FFT_image;
                 console.time('FFT-analytic-wasm');  //
-                apple = this.wasm_fft_analytic( this.helixFamily, this.n_order, this.m_order, 0.01, this.rasterSize);
+                FFT_image = this.wasm_fft_analytic( this.helixFamily, this.n_order+1, this.m_order+1,
+                    this.plot_scale, this.rasterSize);
 
-                let newImageData = new ImageData(Uint8ClampedArray.from(apple), this.rasterSize, this.rasterSize);
+                let newImageData = new ImageData(Uint8ClampedArray.from(FFT_image), this.rasterSize, this.rasterSize);
                 this.ctx.putImageData( newImageData, 0, 0 );
-                this.image.src = this.canvas.toDataURL(); // produces a PNG file
 
+                this.image.style.backgroundImage = "url(" + this.canvas.toDataURL() + ")";
                 console.timeEnd('FFT-analytic-wasm');
-                this.imageDataTest = apple
+                this.imageDataTest = FFT_image;
                 this.updateContrast();  // make sure to apply existing contrast
+            },
+
+            // set the plot scale such that the final layerline (n) is drawn at 70% of the frame height.
+            update_plot_scale(redraw){
+                const max_z_line = this.n_order / (this.helixFamily[0]['rise']*this.helixFamily[0]['frequency']*this.plot_scale);
+                this.plot_scale  = max_z_line/(this.rasterSize/2*0.7) * this.plot_scale;
+                if (redraw) { this.updateFFT(); }
             },
 
             updateContrast() {
@@ -155,7 +174,8 @@ import { toImageArray, toImageArray2, fft_analytic, toIntArr }  from '../utils/f
                 let newImageData = new ImageData(newDataClamped, this.rasterSize, this.rasterSize);
 
                 this.ctx.putImageData( newImageData, 0, 0 );
-                this.image.src = this.canvas.toDataURL(); // produces a PNG file
+                this.image.style.backgroundImage = "url(" + this.canvas.toDataURL() + ")";
+
                 console.timeEnd('contrast-wasm');
             },
 
@@ -176,23 +196,32 @@ import { toImageArray, toImageArray2, fft_analytic, toIntArr }  from '../utils/f
 
             this.loadWASMfuncs();
 
-            // actually attach an image object to canvas.
-            this.image = new Image();
-            this.image.src = this.canvas.toDataURL(); // produces a PNG file
-            document.querySelector( '.rasterImage' ).appendChild( this.image );
-
+            this.image = document.querySelector( '.rasterImage' );
+            this.image.style.backgroundImage = "url(" + this.canvas.toDataURL() + ")";
             console.log('[ Fourierpanel mounted ]')
         }
     }
 </script>
 
 <style scoped>
-    .rasterImage{
-        width: 100%;
+
+    .ui-fft-panel-sub{
+        height: 30rem;
     }
 
-    img .rasterImage{
-        height: 10rem;
+    .card-fft{
+        border-radius: 9px;
+        padding-bottom: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .rasterImage{
+        flex-grow: 1;
+        height:100%;
+        max-height:100%;
+        background-size: contain;
     }
 
     .ui-fft-panel-sub {

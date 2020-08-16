@@ -6,7 +6,7 @@
         <div class="layout-left"><div class="rotated">Built by Nemo Andrea</div></div>
         <div class="layout-central">
           <div class="ui-box ui-command-panel">
-            <div class="card card-accent elevation-3">
+            <div class="card card-accent">
               <div class="card-title title-input">
                 <v-text-field
                         label="Model name"
@@ -28,8 +28,7 @@
               </v-tooltip>
             </div>
             </div>
-            <div class="card elevation-3">
-              <div class="card-title">Helix parameters</div>
+            <div class="card">
               <parameter-panel
                       v-on:updateHelixFamily="setHelixFamily($event)"
                       v-on:computeHelixFamily="computeHelixFamily()"
@@ -37,7 +36,7 @@
                       ref="paramPanel" />
             </div>
           </div>
-          <div class="ui-box ui-realspace-panel"><div class="card card-webgl elevation-3">
+          <div class="ui-box ui-realspace-panel"><div class="card card-webgl">
             <div class="card-title-float card-title">Realspace helix</div>
             <helix-display :helixFamily="helixFamily" />
           </div></div>
@@ -75,8 +74,8 @@ export default {
   }),
   methods: {
     loadExample() {
-      window.location.hash += '#name=B-DNA&radius=1&rise=0.332&frequency=10.5&unit_size=0.2&offset=0' +
-              '&radius=1&rise=0.332&frequency=10.5&unit_size=0.2&offset=1.23&handedness=right';
+      window.location.hash += '#name=B-DNA&radius=1&rise=0.34&frequency=10&unit_size=0.18' +
+              '&radius=1&rise=0.34&frequency=10&unit_size=0.18&offset=1.35';
       location.reload()
     },
 
@@ -156,7 +155,7 @@ export default {
 
   .ui-box{
     margin: 0.5rem;
-    min-height: 50vh;
+    min-height: 80vh;
   }
 
   .ui-command-panel{
@@ -180,9 +179,9 @@ export default {
 
   .card{
     width: 100%;
-    background-color: var(--mygrey);
+    /*background-color: var(--mygrey);*/
     padding: 2rem;
-
+    border:2px solid var(--primary);
     border-radius: 0 30px 30px 30px;
   }
 
@@ -216,12 +215,6 @@ export default {
 
   .card-display{
     margin-bottom: 1rem;
-  }
-
-  .card-fft{
-    border-radius: 9px;
-    padding-bottom: 0.5rem;
-    /*aspect-ratio: 1 / 1;*/
   }
 
   .meta-button-box{

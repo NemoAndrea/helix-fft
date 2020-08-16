@@ -69,13 +69,14 @@
             renderer: '',
             container: '',
             colors: [
+                new THREE.Color(211/255, 94/255, 96/255),  // red
+                new THREE.Color(51/200, 62/200, 91/200),   // indigo
+                new THREE.Color(128/255, 133/255, 133/255),  // gray
+                new THREE.Color(144/255, 103/255, 167/255),
                 new THREE.Color(114/255, 147/255, 203/255),
-                new THREE.Color(204/255, 194/255, 16/255),
                 new THREE.Color(225/255, 151/255, 76/255),
                 new THREE.Color(132/255, 186/255, 91/255),
-                new THREE.Color(211/255, 94/255, 96/255),
-                new THREE.Color(128/255, 133/255, 133/255),
-                new THREE.Color(144/255, 103/255, 167/255)
+                new THREE.Color(204/255, 194/255, 16/255),
             ]
         }),
         methods:{
@@ -100,10 +101,8 @@
                 let handedness = 1;  // right handed=1, left handed =-1
 
                 for ( let [ind, helix] of this.helixFamily.entries()) {
-                    if (ind === 0) {  // if we have a single colour, use meshnormal type
-                        this.material = new THREE.MeshNormalMaterial();
-                    } else if (ind-1 < this.colors.length) {
-                        this.material = new THREE.MeshBasicMaterial( {color: this.colors[ind-1]});
+                     if (ind < this.colors.length) {
+                        this.material = new THREE.MeshToonMaterial( { color: this.colors[ind] });
                     }
 
                     // set handedness for this helix
@@ -127,24 +126,35 @@
                         this.scene.add( object );
                     }
                 }
-                this.refreshDisplay( this.container )
+
+                this.addLights();
+                this.refreshDisplay( this.container );
+            },
+
+            addLights(){
+                let light = new THREE.AmbientLight( 0xffffff, 0.75  ); // soft white light
+                this.scene.add( light );
+
+                const directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
+                directionalLight.position.set( 1, -1, 1 ).normalize();
+                directionalLight.intensity = 0.25
+                directionalLight.castShadow = true;
+                this.scene.add( directionalLight );
             },
 
             setupDisplay(element_name){
                 // get the div we will draw in
                 this.container = document.querySelector( element_name );
                 this.scene = new THREE.Scene();
-                this.scene.background = new THREE.Color( 0xececec );
+                this.scene.background = new THREE.Color( );
 
-                let light = new THREE.AmbientLight( 0xffffff ); // soft white light
-                this.scene.add( light );
 
                 // setup render window
                 this.renderer = new THREE.WebGLRenderer( { antialias: true} );
                 this.renderer.setPixelRatio( window.devicePixelRatio );
                 this.renderer.setSize( this.container.offsetWidth , this.container.offsetHeight );
                 let GLwindow = this.container.appendChild( this.renderer.domElement );
-                GLwindow.style.display = 'block' // really important to prevent ghost whitespace below canvas
+                GLwindow.style.display = 'block'; // really important to prevent ghost whitespace below canvas
 
                 // set up the camera
                 THREE.Object3D.DefaultUp = new THREE.Vector3( 0,0,1);
@@ -185,7 +195,6 @@
                 this.camera.aspect = container.offsetWidth / container.clientHeight ;
                 this.camera.updateProjectionMatrix();
                 this.renderer.setSize( container.offsetWidth, container.clientHeight  );
-
             },
 
             toggleFullscreen(){

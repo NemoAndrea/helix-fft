@@ -1,5 +1,14 @@
 <template>
     <div>
+        <div class="helix-title">
+            <div class="card-title">Helix parameters</div>
+<!--            <v-tooltip bottom >-->
+<!--                <template v-slot:activator="{ on }">-->
+<!--                    <div v-on="on" @click="resetParameters(-1)"><v-icon > mdi-backspace </v-icon></div>-->
+<!--                </template>-->
+<!--                <span>Clear all helices</span>-->
+<!--            </v-tooltip>-->
+        </div>
         <v-form
                 ref="form"
                 v-model="valid">
@@ -29,6 +38,14 @@
                                     <v-icon v-on="on" @click="toggleHandedness(helix)"> mdi-axis-z-rotate-clockwise</v-icon>
                                 </template>
                                 <span>Make right handed helix</span>
+                            </v-tooltip>
+                        </div>
+                        <div class="delete-button">
+                            <v-tooltip bottom>
+                                <template v-slot:activator="{ on }">
+                                    <v-icon v-on="on" @click="resetParameters(index)"> mdi-minus-circle </v-icon>
+                                </template>
+                                <span>Delete helix</span>
                             </v-tooltip>
                         </div>
                         <div class="copy-button">
@@ -117,10 +134,11 @@
                     </template>
                     <span>Add another helix</span>
                 </v-tooltip>
+                <div class="button-box">
                 <v-tooltip bottom>
                     <template v-slot:activator="{ on }">
                         <v-btn
-                                :disabled="!valid"
+                                :disabled="!valid || liveCompute"
                                 color="var(--primary)"
                                 @click="computeHelix(true)"
                                 v-on="on">
@@ -129,6 +147,18 @@
                     </template>
                     <span>Show helix and compute FFT</span>
                 </v-tooltip>
+                <v-tooltip bottom>
+                    <template v-slot:activator="{ on }">
+                        <span v-on="on">
+                        <v-checkbox v-model="liveCompute"
+                                    label="live"
+                                    color="var(--primary)"
+                                     />
+                            </span>
+                    </template>
+                    <span>Automatically compute FFT on parameter change</span>
+                </v-tooltip>
+                </div>
             </div>
         </v-form>
         <v-snackbar
@@ -154,6 +184,7 @@
         name: "ParameterPanel",
         data: () => ({
             valid: false,
+            liveCompute: false,
             numberRules: [
                 v => !!v || 'parameter is required',
                 v => v > 0 || 'value must be larger than 0',
@@ -169,6 +200,17 @@
             snackText: 'unspecified',
             modelName: ''
         }),
+        watch: {
+            // eslint-disable-next-line no-unused-vars
+            helixFamily: {
+                handler: function () {
+                    if (this.liveCompute) {
+                        this.computeHelix(true)
+                    }
+                },
+                deep: true
+            },
+        },
         methods: {
             computeHelix(compute) {
                 // first we make the string input to numeric
@@ -290,6 +332,23 @@
 
                 this.snackText = 'copied model URL to clipboard';
                 this.snackbar = true;
+            },
+
+            // remove a single helix or all helices, and if needed, set back to the default params.
+            // we assume our other logic in component ensures we cannot call this function if helixfamily.length == 1
+            resetParameters( index ) {
+                if (index < 0) { // then clear ALL helices
+                    this.helixFamily = [this.default_params];
+                } else if (this.helixFamily.length == 1) { //only a single helix in family, just reset values but do not remove
+                    this.helixFamily = [this.default_params];
+                } else  { // then clear a single helix at index
+                    this.helixFamily.splice(index, 1);
+
+                    // also make sure the panels are now all collapsed (otherwise it's hard to see if it has worked)
+                    this.inputInFocus = -1;  // set to nonexistent helix (i.e. collapse all)
+                }
+                // update the other components on this new helixfamily
+                this.sendHelixFamily();
             }
         },
         mounted() {
@@ -324,6 +383,11 @@
         display: flex;
     }
 
+    .helix-title{
+        display: flex;
+        justify-content: space-between;
+    }
+
     .helix-header {
         display: flex;
     }
@@ -338,7 +402,7 @@
         display: flex;
     }
 
-    .copy-button{
+    .copy-button, .delete-button{
         margin-left: 0.5rem;
     }
 
