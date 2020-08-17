@@ -105,7 +105,9 @@
                         ></v-text-field>
 
                         <div v-show="index+1 > 1" class="optional-params">
+                            <div class="mini-field">
                             <v-text-field
+
                                     v-model="helix['offset']"
                                     :rules="numberAndZeroRules"
                                     label="Helix Z offset"
@@ -115,6 +117,19 @@
                                     suffix="nm"
                                     type="number"
                             ></v-text-field>
+                            </div>
+                            <div class="mini-field">
+                            <v-text-field
+                                    v-model="helix['rotation']"
+                                    :rules="anyNumberRules"
+                                    label="Rotation"
+                                    outlined
+                                    required
+                                    color="var(--primary)"
+                                    suffix="deg"
+                                    type="number"
+                            ></v-text-field>
+                            </div>
                         </div>
                     </div>
                 </transition>
@@ -193,7 +208,10 @@
                 v => !!v || 'parameter is required',
                 v => v >= 0 || 'value must be larger or equal to 0',
             ],
-            default_params: {'radius':'', 'rise': '', 'frequency': '', 'unit_size': '', 'offset': '0', 'handedness': 'right'},
+            anyNumberRules: [
+                v => !!v || 'parameter is required',
+            ],
+            default_params: {'radius':'', 'rise': '', 'frequency': '', 'unit_size': '', 'offset': '0','rotation':'0','handedness': 'right'},
             helixFamily: [],
             inputInFocus: 1,
             snackbar: false,
@@ -406,6 +424,14 @@
         margin-left: 0.5rem;
     }
 
+    .mini-field{
+        width: 48%;
+    }
+
+    .optional-params{
+        display: flex;
+        justify-content: space-between;
+    }
     .fade-enter-active {
         transition: opacity 0.2s;
     }

@@ -88,11 +88,12 @@
                     this.scene.remove(this.scene.children[0]);
                 }
 
-                // compute relevant scale to draw helix at
-                let max_radius=this.helixFamily[0]['radius'];
+                // compute relevant scale to draw helix at (we also consider the unit size)
+                let max_radius= Number(this.helixFamily[0]['radius']) + Number(this.helixFamily[0]['unit_size']) ;
                 for (let helix of this.helixFamily) {
-                    if ( 1/helix['radius'] < 1/max_radius ){
-                        max_radius = helix['radius']
+                    let draw_radius = Number(helix['radius']) + Number(helix['unit_size']);
+                    if ( 1/ draw_radius < 1/max_radius ){
+                        max_radius = draw_radius
                     }
                 }
                 const scalefac = 10/max_radius;  // the prefactor is an empirical value and might need to be made more robust
@@ -119,8 +120,9 @@
                     // build the helix
                     for ( var i = 0; i < amount ; i ++ ) {
                         let object = new THREE.Mesh( geometry, this.material );
-                        object.position.x = helix['radius'] * scalefac * Math.cos( handedness*i*2*Math.PI / helix['frequency'] );
-                        object.position.y = helix['radius'] * scalefac * Math.sin( handedness*i*2*Math.PI / helix['frequency'] );
+                        let angle = Number(helix['rotation'])/180*Math.PI +  handedness*i*2*Math.PI / helix['frequency'] ;
+                        object.position.x = helix['radius'] * scalefac * Math.cos( angle );
+                        object.position.y = helix['radius'] * scalefac * Math.sin( angle);
                         object.position.z = i*helix['rise'] * scalefac + helix['offset']*scalefac;
 
                         this.scene.add( object );

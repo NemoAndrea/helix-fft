@@ -11,7 +11,7 @@ use num::complex::Complex64;
 use num::traits::{ Pow };
 
 mod bessel_utils; // load HELIX-FFT's bessel library
-use bessel_utils::{ nextBessel };
+use bessel_utils::{ nextBessel, Jn };
 
 
 #[macro_use]
@@ -80,6 +80,7 @@ pub struct Element {
     frequency: String,
     unit_size: String,
     offset: String,
+    rotation: String,
     handedness: String
 }
 
@@ -108,8 +109,6 @@ pub fn FFT_analytic( helix_family: &JsValue, n_range: u8, m_range: u8, scale: f6
 
     let mut z_line:f64;
     let mut bessel:f64;
-    let mut Bessel_n1:Array1<f64> = Array::zeros(raster_size as usize);
-    let mut Bessel_n2:Array1<f64> = Array::zeros(raster_size as usize);
     let mut Ufac:Array1<Complex64> = Array::zeros(raster_size as usize);
 
     //loop over different helices
@@ -118,23 +117,22 @@ pub fn FFT_analytic( helix_family: &JsValue, n_range: u8, m_range: u8, scale: f6
         let radius:f64 = helix.radius.parse::<f64>().unwrap_or(0 as f64);
         let rise:f64 = helix.rise.parse::<f64>().unwrap_or(0 as f64);
         let frequency:f64 = helix.frequency.parse::<f64>().unwrap_or(0 as f64);
-        //let unit_size:f64 = helix.unit_size.parse::<f64>().unwrap_or(0 as f64);
+        //let unit_size:f64 = helix.unit_size.parse::<f64>().unwrap_or(0 as f64);  // not used atm
         let offset:f64 = helix.offset.parse::<f64>().unwrap_or(0 as f64);
-        //let handedness:String = helix.handedness.parse::<String>().unwrap_or("right".clone().parse().unwrap());
+        let rotation:f64 = helix.rotation.parse::<f64>().unwrap_or(0 as f64);
+        //let handedness:String = helix.handedness.parse::<String>().unwrap_or("right".clone().parse().unwrap()); // not used atm
 
-        // compute tom useful quantities
+        // compute some useful quantities
         let pitch:f64 = rise * frequency;
-        let phi_j:f64 = offset / pitch * 2. * PI;
+        let phi_j:f64 = offset / pitch * 2. * PI + rotation * PI/180.; // rotation due to offset AND the rotation
         let midpoint:f64 = raster_size as f64 / 2.;
 
         // compute analytic FFT solution and modify <image>
         for n in 0..n_range {
             // compute Ufac (and update the bessel functions)
             for index in 0..raster_size as usize {
-                bessel = nextBessel(n.into(), 2.*PI*coords[index].abs()*radius*scale, Bessel_n2[index], Bessel_n1[index]);
+                bessel = Jn(n.into(), 2.*PI*coords[index].abs()*radius*scale);
                 Ufac[index] =  bessel * (Complex::new(0.0, n as f64) * (PI / 2. - phi_j) ).exp();
-                Bessel_n1[index] = Bessel_n2[index];
-                Bessel_n2[index] = bessel;
             }
 
             for m in &m_vals {
