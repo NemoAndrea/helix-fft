@@ -44,6 +44,7 @@
               <fourier-panel
                       :helixFamily="helixFamily"
                       :updateCounter="updateCounter"
+                      :name="modelName"
                 />
           </div>
         </div>

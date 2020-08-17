@@ -22,4 +22,8 @@ num = "0.3"
 version = "0.3"
 features = [ "console" ]
 
+# disable wasm-opt for release, as it throws errors
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
 

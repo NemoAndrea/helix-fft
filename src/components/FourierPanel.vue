@@ -34,7 +34,19 @@
         </div>
         <div class="card card-fft">
             <div class="fft-card-header">
-                <div class="card-title">FFT of helix (analytic solution)</div>
+                <div class="fft-card-header-left">
+                    <div class="card-title">FFT of helix (analytic solution)</div>
+                    <div v-if="updateCounter>0"> <!--check we have an image. Not perfect but fine for most cases.-->
+                    <v-tooltip bottom>
+                        <template v-slot:activator="{ on }">
+                            <a id="download-anchor">
+                            <v-icon v-on="on" @click="download_fft()" class="download"> mdi-download </v-icon>
+                            </a>
+                        </template>
+                        <span>Download FFT image</span>
+                    </v-tooltip>
+                    </div>
+                </div>
                 <div class="order-dropdown-container">
                     <div class="order-dropdown">
                         <v-select
@@ -69,13 +81,17 @@
 
 <script>
     // eslint-disable-next-line no-unused-vars
-import { toImageArray, toImageArray2, fft_analytic, toIntArr }  from '../utils/fft_tools.js'
+    import { toImageArray, toImageArray2, fft_analytic, toIntArr }  from '../utils/fft_tools.js'
+    import Panzoom from '@panzoom/panzoom'
 
     export default {
         name: "FourierPanel",
         props: {
             helixFamily: {
                 type: Array,
+            },
+            name: {
+                type: String,
             },
             updateCounter: {
                 type: Number,
@@ -136,7 +152,7 @@ import { toImageArray, toImageArray2, fft_analytic, toIntArr }  from '../utils/f
 
                 // set and display image data
                 this.ctx.putImageData( idata, 0, 0 );
-                this.image.style.backgroundImage = "url(" + this.canvas.toDataURL() + ")";
+                this.image.src = this.canvas.toDataURL(); // produces a PNG file
 
                 this.updateContrast();  // make sure to apply existing contrast
             },
@@ -152,7 +168,7 @@ import { toImageArray, toImageArray2, fft_analytic, toIntArr }  from '../utils/f
                 let newImageData = new ImageData(Uint8ClampedArray.from(FFT_image), this.rasterSize, this.rasterSize);
                 this.ctx.putImageData( newImageData, 0, 0 );
 
-                this.image.style.backgroundImage = "url(" + this.canvas.toDataURL() + ")";
+                this.image.src = this.canvas.toDataURL(); // produces a PNG file
                 console.timeEnd('FFT-analytic-wasm');
                 this.imageDataTest = FFT_image;
                 this.updateContrast();  // make sure to apply existing contrast
@@ -174,9 +190,18 @@ import { toImageArray, toImageArray2, fft_analytic, toIntArr }  from '../utils/f
                 let newImageData = new ImageData(newDataClamped, this.rasterSize, this.rasterSize);
 
                 this.ctx.putImageData( newImageData, 0, 0 );
-                this.image.style.backgroundImage = "url(" + this.canvas.toDataURL() + ")";
+                this.image.src = this.canvas.toDataURL(); // produces a PNG file
 
                 console.timeEnd('contrast-wasm');
+            },
+
+            download_fft(){
+                console.log('> exporting FFT image');
+                let anchor = document.getElementById("download-anchor");
+                let currentDate = new Date().toISOString().slice(0,10);
+                anchor.setAttribute('href', this.canvas.toDataURL()); // set image data to current displayed image
+                const filename = `${currentDate}_FFT_${this.name}`;
+                anchor.setAttribute('download', filename); // set download name
             },
 
             async loadWASMfuncs (){
@@ -196,8 +221,19 @@ import { toImageArray, toImageArray2, fft_analytic, toIntArr }  from '../utils/f
 
             this.loadWASMfuncs();
 
-            this.image = document.querySelector( '.rasterImage' );
-            this.image.style.backgroundImage = "url(" + this.canvas.toDataURL() + ")";
+            this.image = new Image();
+            this.image.src = this.canvas.toDataURL(); // produces a PNG file
+            document.querySelector( '.rasterImage' ).appendChild( this.image );
+            this.image.style.position = 'absolute';
+            this.image.style.width = '100%';
+            this.image.style.height = '100%';
+            this.image.style.objectFit = 'contain';
+
+            const panzoom = Panzoom(this.image, {
+                minScale: 1,
+            });
+            this.image.parentElement.addEventListener('wheel', panzoom.zoomWithWheel);
+
             console.log('[ Fourierpanel mounted ]')
         }
     }
@@ -221,7 +257,7 @@ import { toImageArray, toImageArray2, fft_analytic, toIntArr }  from '../utils/f
         flex-grow: 1;
         height:100%;
         max-height:100%;
-        background-size: contain;
+        position: relative;
     }
 
     .ui-fft-panel-sub {
@@ -237,6 +273,10 @@ import { toImageArray, toImageArray2, fft_analytic, toIntArr }  from '../utils/f
         margin-bottom: 0.5rem;
     }
 
+    .fft-card-header-left{
+        display: flex;
+    }
+
     .order-dropdown{
         width: 50%;
         margin-left: 1rem;
@@ -245,5 +285,9 @@ import { toImageArray, toImageArray2, fft_analytic, toIntArr }  from '../utils/f
     .order-dropdown-container{
         display: flex;
         width: 30%;
+    }
+
+    .download{
+        margin: 4px;
     }
 </style>

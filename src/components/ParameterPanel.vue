@@ -222,7 +222,7 @@
             // eslint-disable-next-line no-unused-vars
             helixFamily: {
                 handler: function () {
-                    if (this.liveCompute) {
+                    if (this.liveCompute && this.valid) {
                         this.computeHelix(true)
                     }
                 },
@@ -326,7 +326,7 @@
 
             exportModel(name) {
                 console.log('exporting with name ' + name);
-                let exportString = window.location.hostname;
+                let exportString = window.location.href.split('#')[0];  // get URL minus any pre-existing params
                 exportString += '#';
                 if (name) { exportString += 'name=' + name}
                 for (let helix of this.helixFamily) {
@@ -372,7 +372,6 @@
         mounted() {
             this.helixFamily.push(this.default_params);
             this.parseQueryString();
-
         }
     }
 </script>
