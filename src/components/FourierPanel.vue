@@ -1,8 +1,15 @@
 <template>
     <div class="ui-fft-panel-sub">
         <div class="card card-display">
-
-            <div class="card-title">Display Controls (FFT contrast)</div>
+            <div class="display-controls-header">
+                <div class="card-title">Diffraction Display Controls</div>
+                <v-tooltip bottom >
+                    <template v-slot:activator="{ on }">
+                        <v-icon v-on="on" @click="update_plot_scale(true)"> mdi-arrow-split-horizontal</v-icon>
+                    </template>
+                    <span>resize diffraction plot to fit current n</span>
+                </v-tooltip>
+            </div>
             <div>
                 <v-range-slider
                         v-model="contrast['range']"
@@ -26,16 +33,12 @@
                           track-color="darkgrey"
                           @end="updateContrast"
                 />
-
-
-                <button @click="updateFFT_old" style="background: lightcyan; color: black; padding: 5px; margin: 5px">legacy FFT calculation</button>
-                <button @click="update_plot_scale(true)" style="background: lightcyan; color: black; padding: 5px; margin: 5px">Auto Scale FFT plot</button>
             </div>
         </div>
         <div class="card card-fft">
             <div class="fft-card-header">
                 <div class="fft-card-header-left">
-                    <div class="card-title">FFT of helix (analytic solution)</div>
+                    <div class="card-title">Diffraction pattern (analytic)</div>
                     <div v-if="updateCounter>0"> <!--check we have an image. Not perfect but fine for most cases.-->
                     <v-tooltip bottom>
                         <template v-slot:activator="{ on }">
@@ -132,31 +135,6 @@
             wasm_fft_analytic: ''
         }),
         methods: {
-            updateFFT_old(){
-                this.update_plot_scale(false);
-                console.time('ana-fft');
-                for (let helix of this.helixFamily) {  // STILL NEEDS TO BE IMPLEMENTED FOR MULTIPLE HELICES
-                    this.analyticFFT = fft_analytic( helix['radius'], helix['rise'], helix['frequency'],
-                        helix['unit_size'], this.rasterSize, this.n_order+1, this.m_order+1, this.plot_scale );
-                    break  // for now, until analyticFFT is fixed
-                }
-                console.timeEnd('ana-fft');
-
-                let idata = this.ctx.createImageData( this.rasterSize, this.rasterSize );
-
-                toImageArray( this.analyticFFT, idata, 0.5 );
-
-                // save the raw image data to a variable as reference for contrast adjustment
-                this.imageData = idata.data;
-                this.imageDataTest = toIntArr(this.imageData);
-
-                // set and display image data
-                this.ctx.putImageData( idata, 0, 0 );
-                this.image.src = this.canvas.toDataURL(); // produces a PNG file
-
-                this.updateContrast();  // make sure to apply existing contrast
-            },
-
             updateFFT( autoscale ){
                 if (autoscale) { this.update_plot_scale(false) }
 
@@ -253,6 +231,20 @@
         height: 100%;
     }
 
+    .card-display{
+        padding-bottom: 0;
+    }
+
+    .display-controls-header{
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+
+    .display-controls-header .card-title {
+        margin-bottom: 0;
+    }
+
     .rasterImage{
         flex-grow: 1;
         height:100%;
@@ -289,5 +281,30 @@
 
     .download{
         margin: 4px;
+    }
+
+    @media only screen and (max-width: 600px) {
+        .card-fft{
+            height:120vw;
+            padding: 0;
+        }
+
+        .order-dropdown{
+            width: 100%;
+            margin-left: 0;
+            margin-bottom: 0.5rem;
+        }
+
+        .order-dropdown-container{
+            display: block;
+            width: 30%;
+        }
+
+        .fft-card-header{
+            margin: 0.5rem 1.5rem 0 1.5rem;
+        }
+        .rasterImage{
+            margin: 0.5rem;
+        }
     }
 </style>

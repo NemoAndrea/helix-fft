@@ -19,7 +19,7 @@
                 <span>Toggle auto-rotation</span>
             </v-tooltip>
             </div>
-            <div>
+            <div class="button-fullscreen">
             <v-tooltip top>
                 <template v-slot:activator="{ on }">
                     <v-btn
@@ -237,5 +237,11 @@
         justify-content: space-between;
         width: 100%;
         bottom: 10px
+    }
+
+    @media only screen and (max-width: 600px) {
+        .button-fullscreen{
+            display: none;
+        }
     }
 </style>

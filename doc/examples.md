@@ -14,4 +14,4 @@ Below are some example `helix-families` (a collection of helices that make up a 
 
 ### Microtubule (13 Protofilaments) - [open model](https://nemoandrea.github.io/helix-deploy/#name=Microtubule_13PF&radius=12.5&rise=0.946&frequency=13&unit_size=2.5&offset=0&handedness=right&radius=12.5&rise=0.946&frequency=13&unit_size=2.5&offset=4.1&handedness=right&radius=12.5&rise=0.946&frequency=13&unit_size=2.5&offset=8.2&handedness=right)
 
-*Another common helical filament in cells, Microtubules are not quite helical, but are close enough for the analytic solution to reproduce experimental data. Microtubules of this variety can be seen as three-start helices (i.e. three helices).* **This model should be viewed with `n=13` and `m=1` **
+*Another common helical filament in cells, Microtubules are not quite helical, but are close enough for the analytic solution to reproduce experimental data. Microtubules of this variety can be seen as three-start helices (i.e. three helices).* **This model should be viewed with `n=13` and `m=1`**

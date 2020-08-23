@@ -9,7 +9,7 @@ You can use it here [nemoandrea.github.io/helix-deploy/](https://nemoandrea.gith
 
 # Tutorial & Example
 
-You can have a look at the [tutorial and some examples]().
+You can have a look at the [tutorial](doc/tutorial.md) and  [examples](doc/examples.md).
 
  If you have any interesting structures that you'd like to have added to the list of examples, send me  message on twitter (link on helix-fft page) or email.
 
