@@ -83,8 +83,6 @@
 </template>
 
 <script>
-    // eslint-disable-next-line no-unused-vars
-    import { toImageArray, toImageArray2, fft_analytic, toIntArr }  from '../utils/fft_tools.js'
     import Panzoom from '@panzoom/panzoom'
 
     export default {

@@ -41,8 +41,8 @@
 </template>
 
 <script>
-    import * as THREE from '../../ext/three.module.js';
-    import OrbitControls from '../../ext/OrbitControls'
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
     export default {
         name: "HelixDisplay",
@@ -193,7 +193,7 @@
             },
 
             refreshDisplay(container) {
-                //console.log('Refreshing aspect ratio plot');
+                console.log('Refreshing aspect ratio plot');
                 this.camera.aspect = container.offsetWidth / container.clientHeight ;
                 this.camera.updateProjectionMatrix();
                 this.renderer.setSize( container.offsetWidth, container.clientHeight  );
