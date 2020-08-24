@@ -3,7 +3,7 @@ This repository contains the source code for **helix-fft**, a web-app that will 
 
 This may be useful in educational contexts or to quickly verify whether an observed diffraction pattern is compatible with a certain helical structure.
 
-You can use it here [nemoandrea.github.io/helix-deploy/](https://nemoandrea.github.io/helix-deploy/), no installation required!
+You can use it here [nemoandrea.github.io/helix-deploy/](https://nemoandrea.github.io/helixiser/), no installation required!
 
 
 

@@ -10,6 +10,6 @@ git add -A
 git commit -m 'deploy'
 
 echo '>>> Pushing to remote...'
-git remote add origin https://github.com/nemoandrea/helix-deploy.git
+git remote add origin https://github.com/nemoandrea/helixiser.git
 git push -u origin master --force
 cd - 

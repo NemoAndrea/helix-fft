@@ -7,7 +7,7 @@ module.exports = {
         "vuetify"
     ],
     publicPath: process.env.NODE_ENV === 'production'
-        ? '/helix-deploy/'
+        ? '/helixiser/'
         : '/',
     // everything below is for WASM (web assembly from Rust)
     chainWebpack: (config) => {
