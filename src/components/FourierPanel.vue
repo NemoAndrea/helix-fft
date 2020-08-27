@@ -35,6 +35,7 @@
                 />
             </div>
         </div>
+
         <div class="card card-fft">
             <div class="fft-card-header">
                 <div class="fft-card-header-left">
@@ -60,6 +61,7 @@
                                 outlined
                                 dense
                                 hide-details
+                                @change="updateFFT( false )"
                         />
                     </div>
                     <div class="order-dropdown">
@@ -71,6 +73,7 @@
                                 outlined
                                 dense
                                 hide-details
+                                @change="updateFFT( false )"
                         />
                     </div>
                 </div>
@@ -98,17 +101,14 @@
                 type: Number,
                 default: 0,
             },
+            externalDisplayParams: {
+                type: Object
+            },
         },
         watch: {
             // eslint-disable-next-line no-unused-vars
             updateCounter: {
                 handler: function () { this.updateFFT( false) }
-            },
-            n_order: {
-                handler: function () { this.updateFFT( false ) }
-            },
-            m_order: {
-                handler: function () { this.updateFFT( false ) }
             },
         },
         data: () => ({
@@ -180,12 +180,52 @@
                 anchor.setAttribute('download', filename); // set download name
             },
 
+            // export display parameters so that they can be added to the model URL
+            exportDisplayParams(){
+                let exportParams = {};  // we will add n,m, plot_scale if they are not the default value.
+
+                if (this.n_order !== 5){
+                    exportParams['n'] = this.n_order
+                }
+                if (this.m_order !== 0){
+                    exportParams['m'] = this.m_order
+                }
+                if (this.plot_scale !== 0.01) {
+                    // we scale the plot_scale to be more compact (and rescale when importing)
+                    // and round it to keep URL readable.
+                    exportParams['s'] = +(this.plot_scale * 100).toFixed(2);
+                }
+
+                // export non-default values
+                this.$emit( 'exportDisplayParams', exportParams )
+            },
+
+            // the URL with the model contained display parameters, so we should set them, overriding the default
+            setDisplayParams (){
+                for (const [key, value] of Object.entries( this.externalDisplayParams ) ) {
+                    if (key === 'n') {
+                        if ( this.n_order_list.includes(Number(value)) ){  // make sure we are considering a valid value
+                            this.n_order = Number(value);
+                        }
+                    } else if (key == 'm'){
+                        if ( this.m_order_list.includes(Number(value)) ){  // make sure we are considering a valid value
+                            this.m_order = Number(value);
+                        }
+                    } else if (key == 's'){
+                        if (value > 0) {  // only positive values for the scale
+                            this.plot_scale = value / 100;  // we have to scale it back ( see exportDisplayParams() )
+                        }
+                    }
+                }
+            },
+
             async loadWASMfuncs (){
                 this.wasm_contrast = (await this.wasm).set_contrast;
                 this.wasm_fft_analytic = (await this.wasm).FFT_analytic;
+
             },
         },
-        mounted() {
+        async mounted() {
             this.canvas = document.createElement( 'canvas' );
             this.canvas.width = this.rasterSize;
             this.canvas.height = this.rasterSize;
@@ -194,8 +234,6 @@
             this.wasm = import("../../wasm/pkg");
 
             this.imageDataTest = new Uint8Array( 4 * this.rasterSize * this.rasterSize );
-
-            this.loadWASMfuncs();
 
             this.image = new Image();
             this.image.src = this.canvas.toDataURL(); // produces a PNG file
@@ -209,6 +247,9 @@
                 minScale: 1,
             });
             this.image.parentElement.addEventListener('wheel', panzoom.zoomWithWheel);
+
+            await this.loadWASMfuncs();
+            this.setDisplayParams();  // set the external display paramters (loaded from URL)
 
             console.log('[ Fourierpanel mounted ]')
         }

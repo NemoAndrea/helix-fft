@@ -36,6 +36,7 @@
                       v-on:updateHelixFamily="setHelixFamily($event)"
                       v-on:computeHelixFamily="computeHelixFamily()"
                       v-on:updateName="modelName = arguments[0]"
+                      v-on:newDisplayParams="displaySettings = arguments[0]"
                       ref="paramPanel" />
             </div>
           </div>
@@ -48,6 +49,9 @@
                       :helixFamily="helixFamily"
                       :updateCounter="updateCounter"
                       :name="modelName"
+                      :externalDisplayParams="displaySettings"
+                      v-on:exportDisplayParams="displaySettings = arguments[0]"
+                      ref="fourierPanel"
                 />
           </div>
         </div>
@@ -73,6 +77,7 @@ export default {
   },
   data: () => ({
     helixFamily: [],
+    displaySettings: {},
     modelName: '',
     updateCounter: 0
   }),
@@ -98,8 +103,10 @@ export default {
     },
 
     exportCurrentHelixFamily (){
+      this.$refs.fourierPanel.exportDisplayParams();  // we must first fetch the displaySettings (from fourierpanel)
+
       // directly call method 'exportmode()' in ParameterPanel child (required ref to be defined in html above)
-      this.$refs.paramPanel.exportModel(this.modelName)
+      this.$refs.paramPanel.exportModel(this.modelName, this.displaySettings)
     },
 
     updatePageTitle(){

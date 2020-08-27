@@ -271,6 +271,7 @@
 
                 let newHelixFamily =[];
                 let helix = {};
+                let displayParams = {};
                 const validKeys = Object.keys(this.default_params);
                 let badKeys = [];
 
@@ -286,8 +287,13 @@
                     if ( validKeys.includes(key) ){
                         helix[key] = value
                     } else if (key === 'name') {
-                        console.log('Baby has a name')
                         this.$emit( 'updateName', value );  // this query model has a name. Update parent.
+                    } else if (key === 'n') {
+                        displayParams[key] = value.replace( '###','' );  // may have trailing ###
+                    } else if (key === 'm') {
+                        displayParams[key] = value.replace( '###','' );  // may have trailing ###
+                    } else if (key === 's') {
+                        displayParams[key] = value.replace( '###','' );  // may have trailing ###
                     } else {
                         badKeys.push(key)
                     }
@@ -303,7 +309,10 @@
                     // we are done parsing, let's send it over for calculation
                     console.log(`query string loaded for: ${newHelixFamily.length} helix objects`);
                     this.helixFamily = newHelixFamily;
-                    this.computeHelix(false)  // update values, but do not compute FFT to prevent loading lag
+                    this.computeHelix(false);  // update values, but do not compute FFT to prevent loading lag
+                    if (displayParams){  // if not empty
+                        this.$emit( 'newDisplayParams', displayParams );  // we have new diffraction panel display param
+                    }
                 } else {
                     console.log('No query string parsed.')
                 }
@@ -324,16 +333,31 @@
                 }
             },
 
-            exportModel(name) {
+            exportModel( name, displayParams ) {
                 console.log('exporting with name ' + name);
                 let exportString = window.location.href.split('#')[0];  // get URL minus any pre-existing params
                 exportString += '#';
+
+                // add the model name to the URL (can be empty)
                 if (name) { exportString += 'name=' + name}
+                // add the display parameters to the URL (can be empty)
+                if ( Object.entries(displayParams).length > 0) {  // check if empty
+                    for (const [key, value] of Object.entries(displayParams) ) {
+                        if (exportString.slice(-1) !== '#') {  // prevent problems with first entry
+                            exportString += '&' + key + '=' + value
+                        } else { // if it is the first entry of the params, it shouldnt have an &
+                            exportString += key + '=' + value
+                        }
+                    }
+                    exportString += '###'; // we add another hash to delineate the display params from helix params
+                }
+
+                // add the helices in the URL
                 for (let helix of this.helixFamily) {
                     for ( const [key, value] of Object.entries( helix ) ) {
-                        if (exportString.slice(-1)!== '#') {  // prevent problems with first entry
+                        if (exportString.length > 1) {  // prevent problems with first entry
                             exportString += '&' + key + '=' + value
-                        } else {
+                        } else { // if it is the first entry of the params, it shouldnt have an &
                             exportString += key + '=' + value
                         }
                     }

@@ -43,6 +43,7 @@
 <script>
     import * as THREE from 'three';
     import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+    import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
 
     export default {
         name: "HelixDisplay",
@@ -67,6 +68,7 @@
             fullscreen: false,
             camera: '',
             renderer: '',
+            effect: '',
             container: '',
             colors: [
                 new THREE.Color(211/255, 94/255, 96/255),  // red
@@ -115,7 +117,7 @@
 
                     let amount = Math.ceil( 100 / ( helix['rise']*scalefac ) );  // number of helical units to draw
                     if (amount > 1000) { amount = 1000}
-                    let geometry = new THREE.SphereGeometry( helix['unit_size']*scalefac, 12,12 );
+                    let geometry = new THREE.SphereGeometry( helix['unit_size']*scalefac, 32,16 );
 
                     // build the helix
                     for ( var i = 0; i < amount ; i ++ ) {
@@ -158,6 +160,7 @@
                 let GLwindow = this.container.appendChild( this.renderer.domElement );
                 GLwindow.style.display = 'block'; // really important to prevent ghost whitespace below canvas
 
+                this.effect = new OutlineEffect( this.renderer );  // add black outline to helix subunits
                 // set up the camera
                 THREE.Object3D.DefaultUp = new THREE.Vector3( 0,0,1);
                 this.camera = new THREE.PerspectiveCamera( 40, this.container.offsetWidth/this.container.offsetHeight,
@@ -184,7 +187,7 @@
                 const render =  () => {
                     controls.update();
                     controls.autoRotate = this.rotate;
-                    this.renderer.render( this.scene, this.camera );
+                    this.effect.render( this.scene, this.camera );
                     this.camera.lookAt( new THREE.Vector3(0,0,cam_height) );
                 };
 
