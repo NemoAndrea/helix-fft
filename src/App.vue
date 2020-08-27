@@ -20,16 +20,68 @@
                 ></v-text-field>
               </div>
               <div class="meta-button-box">
-              <v-btn outlined color="white" @click="loadExample()">Load example</v-btn>
-              <v-tooltip bottom>
-                <template v-slot:activator="{ on }">
-                  <v-btn icon color="white" v-on="on" @click="exportCurrentHelixFamily()">
-                    <v-icon>mdi-export-variant</v-icon>
-                  </v-btn>
-                </template>
-                <span>Export model to shareable URL in clipboard</span>
-              </v-tooltip>
-            </div>
+                <v-btn outlined color="white" @click="loadExample()">Load example</v-btn>
+                <div class="share-buttons">
+                  <v-tooltip bottom>
+                    <template v-slot:activator="{ on }">
+                      <v-btn icon color="white" v-on="on" @click="exportCurrentHelixFamily()">
+                        <v-icon>mdi-content-copy</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>Copy link to model</span>
+                  </v-tooltip>
+                  <v-menu left bottom :close-on-click=true transition="slide-y-transition" :offset-y=true >
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-btn icon color="white" v-bind="attrs" v-on="on" @click="getShareValues">
+                        <v-icon>mdi-share-variant</v-icon>
+                      </v-btn>
+                    </template>
+
+
+                    <v-list shaped>
+                      <v-subheader>SHARE TO</v-subheader>
+                      <v-list-item ripple>
+                        <ShareNetwork
+                                network="twitter"
+                                :url=modelURL
+                                :title="shareText"
+                                hashtags="helixiser">
+                          <v-icon color="#1da1f2">mdi-twitter</v-icon>
+                          <span style="color:gray!important;"> Twitter </span>
+                        </ShareNetwork>
+                      </v-list-item>
+                      <v-list-item ripple>
+                        <ShareNetwork
+                                network="whatsapp"
+                                :url=modelURL
+                                :title="shareText">
+                          <v-icon color="#25d366">mdi-whatsapp</v-icon>
+                          <span style="color:gray!important;"> Whatsapp </span>
+                        </ShareNetwork>
+                      </v-list-item >
+                      <v-list-item ripple>
+                        <ShareNetwork
+                                network="telegram"
+                                :url=modelURL
+                                :title="shareText">
+                          <v-icon color="#0088cc">mdi-telegram</v-icon>
+                          <span style="color:gray!important;"> Telegram </span>
+                        </ShareNetwork>
+                      </v-list-item>
+                      <v-list-item ripple>
+                        <ShareNetwork
+                                network="reddit"
+                                :url=modelURL
+                                :title="shareText">
+                          <v-icon color="#ff4500">mdi-reddit</v-icon>
+                          <span style="color:gray!important;"> Reddit </span>
+                        </ShareNetwork>
+                      </v-list-item>
+                    </v-list>
+                  </v-menu>
+
+                </div>
+              </div>
             </div>
             <div class="card">
               <parameter-panel
@@ -37,6 +89,7 @@
                       v-on:computeHelixFamily="computeHelixFamily()"
                       v-on:updateName="modelName = arguments[0]"
                       v-on:newDisplayParams="displaySettings = arguments[0]"
+                      v-on:newModelURL="modelURL = arguments[0]"
                       ref="paramPanel" />
             </div>
           </div>
@@ -66,6 +119,10 @@
 import HelixDisplay from "./components/HelixDisplay";
 import FourierPanel from "./components/FourierPanel";
 import ParameterPanel from "./components/ParameterPanel";
+import Vue from 'vue'
+import VueSocialSharing from 'vue-social-sharing'
+
+Vue.use(VueSocialSharing);
 
 export default {
   name: 'App'
@@ -79,7 +136,9 @@ export default {
     helixFamily: [],
     displaySettings: {},
     modelName: '',
-    updateCounter: 0
+    updateCounter: 0,
+    modelURL: '',
+    shareText: '',
   }),
   watch: {
     modelName: {
@@ -109,13 +168,27 @@ export default {
       this.$refs.paramPanel.exportModel(this.modelName, this.displaySettings)
     },
 
+    getShareValues(){
+      // first we update the share link
+      this.$refs.fourierPanel.exportDisplayParams();  // we must first fetch the displaySettings (from fourierpanel)
+      this.$refs.paramPanel.emitModelURL(this.modelName, this.displaySettings)
+      // now this.modelURL  string should be updated
+
+      // then we update the sharetext
+      if (this.modelName) {
+        this.shareText = 'Check out diffraction pattern of (helical) ' + this.modelName + '. ';
+      } else {
+        this.shareText = 'Check out the diffraction pattern of this helical structure. ';
+      }
+    },
+
     updatePageTitle(){
       if (this.modelName) {
         document.title = this.modelName + ' | Helixiser';
       } else {
         document.title = 'Helixiser';
       }
-    }
+    },
   },
   mounted() {
     console.log('[ Loaded main component ]');
@@ -292,6 +365,5 @@ export default {
     .ui-realspace-panel, .ui-fft-panel, .ui-command-panel {
       flex-basis: 100%;
     }
-
   }
 </style>

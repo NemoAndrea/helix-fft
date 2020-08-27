@@ -231,34 +231,28 @@
         },
         methods: {
             computeHelix(compute) {
-                // first we make the string input to numeric
-                // for (let helix of this.helixFamily) {
-                //     helix['radius'] = Number(helix['radius']);
-                //     helix['rise'] =  Number(helix['rise']);
-                //     helix['frequency'] =  Number(helix['frequency']);
-                //     helix['unit_size'] =  Number(helix['unit_size']);
-                // }
-                // then we send it off to the rest of the application
                 this.sendHelixFamily();
-                if (compute) { this.computeHelixFamily() }
+                if (compute) {
+                    this.computeHelixFamily()
+                }
             },
 
             sendHelixFamily() {
                 console.log('Sending new helix-family off for computation');
-                this.$emit( 'updateHelixFamily', [...this.helixFamily] )
+                this.$emit('updateHelixFamily', [...this.helixFamily])
             },
 
             computeHelixFamily() {
-                this.$emit( 'computeHelixFamily' )
+                this.$emit('computeHelixFamily')
             },
 
             newHelix() {
                 // add a new helix to the family (will expose new form options)
-                this.helixFamily.push( this.default_params )
+                this.helixFamily.push(this.default_params)
             },
 
-            setInFocus( helix_number ) {
-                if (this.inputInFocus  === helix_number) {
+            setInFocus(helix_number) {
+                if (this.inputInFocus === helix_number) {
                     this.inputInFocus = -1;  // set to nonexistent helix (i.e. collapse all)
                 } else {
                     this.inputInFocus = helix_number;
@@ -266,41 +260,41 @@
             },
 
             parseQueryString() {  // this uses not very robust methods
-                console.log( 'Checking query string' );
-                const searchParams = new URLSearchParams( window.location.hash );
+                console.log('Checking query string');
+                const searchParams = new URLSearchParams(window.location.hash);
 
-                let newHelixFamily =[];
+                let newHelixFamily = [];
                 let helix = {};
                 let displayParams = {};
                 const validKeys = Object.keys(this.default_params);
                 let badKeys = [];
 
-                for ( let [key, value] of searchParams ) {
-                    key = key.replace( '#','' );  // remove the # from the parameter (only needed for the first key)
+                for (let [key, value] of searchParams) {
+                    key = key.replace('#', '');  // remove the # from the parameter (only needed for the first key)
 
-                    if ( key === 'radius' ) {  // we assume that the previous helix was specified if we add new radius
-                        newHelixFamily.push( {...this.default_params});  // add a new helix object
-                        helix = newHelixFamily[newHelixFamily.length -1];  // get the last helix object from family
+                    if (key === 'radius') {  // we assume that the previous helix was specified if we add new radius
+                        newHelixFamily.push({...this.default_params});  // add a new helix object
+                        helix = newHelixFamily[newHelixFamily.length - 1];  // get the last helix object from family
                     }
 
                     // add value to helix if it is a valid key (specified in default_params)
-                    if ( validKeys.includes(key) ){
+                    if (validKeys.includes(key)) {
                         helix[key] = value
                     } else if (key === 'name') {
-                        this.$emit( 'updateName', value );  // this query model has a name. Update parent.
+                        this.$emit('updateName', value);  // this query model has a name. Update parent.
                     } else if (key === 'n') {
-                        displayParams[key] = value.replace( '###','' );  // may have trailing ###
+                        displayParams[key] = value.replace('###', '');  // may have trailing ###
                     } else if (key === 'm') {
-                        displayParams[key] = value.replace( '###','' );  // may have trailing ###
+                        displayParams[key] = value.replace('###', '');  // may have trailing ###
                     } else if (key === 's') {
-                        displayParams[key] = value.replace( '###','' );  // may have trailing ###
+                        displayParams[key] = value.replace('###', '');  // may have trailing ###
                     } else {
                         badKeys.push(key)
                     }
                 }
 
                 //show bad keys in snackbar
-                if ( badKeys.length > 0 ) {
+                if (badKeys.length > 0) {
                     this.snackbar = true;
                     this.snackText = 'The following invalid keys were ignored: ' + badKeys.join(', ');
                 }
@@ -310,22 +304,22 @@
                     console.log(`query string loaded for: ${newHelixFamily.length} helix objects`);
                     this.helixFamily = newHelixFamily;
                     this.computeHelix(false);  // update values, but do not compute FFT to prevent loading lag
-                    if (displayParams){  // if not empty
-                        this.$emit( 'newDisplayParams', displayParams );  // we have new diffraction panel display param
+                    if (displayParams) {  // if not empty
+                        this.$emit('newDisplayParams', displayParams);  // we have new diffraction panel display param
                     }
                 } else {
                     console.log('No query string parsed.')
                 }
             },
 
-            copyHelixParams(index){
-                console.log(`Copying parameters of helix ${index+1} into a new helix`);
-                this.helixFamily.push( {...this.helixFamily[index]} );
-                this.snackText = `Copied helix parameters from helix ${index+1}`;
+            copyHelixParams(index) {
+                console.log(`Copying parameters of helix ${index + 1} into a new helix`);
+                this.helixFamily.push({...this.helixFamily[index]});
+                this.snackText = `Copied helix parameters from helix ${index + 1}`;
                 this.snackbar = true;
             },
 
-            toggleHandedness( helix ) {
+            toggleHandedness(helix) {
                 if (helix['handedness'] === 'right') {
                     helix['handedness'] = 'left';
                 } else if (helix['handedness'] === 'left') {
@@ -333,16 +327,17 @@
                 }
             },
 
-            exportModel( name, displayParams ) {
-                console.log('exporting with name ' + name);
+            generateModelURL(name, displayParams) {
                 let exportString = window.location.href.split('#')[0];  // get URL minus any pre-existing params
                 exportString += '#';
 
                 // add the model name to the URL (can be empty)
-                if (name) { exportString += 'name=' + name}
+                if (name) {
+                    exportString += 'name=' + name.replace(/ /g, '%20')  // replace spaces in the name
+                }
                 // add the display parameters to the URL (can be empty)
-                if ( Object.entries(displayParams).length > 0) {  // check if empty
-                    for (const [key, value] of Object.entries(displayParams) ) {
+                if (Object.entries(displayParams).length > 0) {  // check if empty
+                    for (const [key, value] of Object.entries(displayParams)) {
                         if (exportString.slice(-1) !== '#') {  // prevent problems with first entry
                             exportString += '&' + key + '=' + value
                         } else { // if it is the first entry of the params, it shouldnt have an &
@@ -354,7 +349,7 @@
 
                 // add the helices in the URL
                 for (let helix of this.helixFamily) {
-                    for ( const [key, value] of Object.entries( helix ) ) {
+                    for (const [key, value] of Object.entries(helix)) {
                         if (exportString.length > 1) {  // prevent problems with first entry
                             exportString += '&' + key + '=' + value
                         } else { // if it is the first entry of the params, it shouldnt have an &
@@ -362,6 +357,12 @@
                         }
                     }
                 }
+
+                return exportString
+            },
+
+            exportModel( name, displayParams ) {
+                const exportString = this.generateModelURL (name, displayParams);
 
                 // copy to user clipboard
                 var dummy = document.createElement("textarea");
@@ -374,6 +375,11 @@
 
                 this.snackText = 'copied model URL to clipboard';
                 this.snackbar = true;
+            },
+
+            emitModelURL( name, displayParams ){
+                const exportString = this.generateModelURL (name, displayParams);
+                this.$emit('newModelURL', exportString)
             },
 
             // remove a single helix or all helices, and if needed, set back to the default params.
