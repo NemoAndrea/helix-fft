@@ -221,7 +221,7 @@
 
             async loadWASMfuncs (){
                 this.wasm_contrast = (await this.wasm).set_contrast;
-                this.wasm_fft_analytic = (await this.wasm).FFT_analytic;
+                this.wasm_fft_analytic = (await this.wasm).WASM_diffraction_analytic;
 
             },
         },
