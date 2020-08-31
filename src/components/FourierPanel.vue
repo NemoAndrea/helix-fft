@@ -138,8 +138,8 @@
 
                 let FFT_image;
                 console.time('FFT-analytic-wasm');  //
-                FFT_image = this.wasm_fft_analytic( this.helixFamily, this.n_order+1, this.m_order+1,
-                    this.plot_scale, this.rasterSize);
+                FFT_image = this.wasm_fft_analytic( this.helixFamily, this.n_order, this.m_order,
+                    this.plot_scale, this.rasterSize );
 
                 let newImageData = new ImageData(Uint8ClampedArray.from(FFT_image), this.rasterSize, this.rasterSize);
                 this.ctx.putImageData( newImageData, 0, 0 );
@@ -220,8 +220,8 @@
             },
 
             async loadWASMfuncs (){
-                this.wasm_contrast = (await this.wasm).set_contrast;
-                this.wasm_fft_analytic = (await this.wasm).WASM_diffraction_analytic;
+                this.wasm_contrast = (await this.wasm).wasm_adjust_contrast;
+                this.wasm_fft_analytic = (await this.wasm).wasm_diffraction_analytic;
 
             },
         },
