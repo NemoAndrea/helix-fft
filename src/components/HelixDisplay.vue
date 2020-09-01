@@ -225,7 +225,7 @@
     }
 </script>
 
-<style scoped>
+<style>
     .helix-display{
         height: 100%;
         width: 100%;
@@ -245,6 +245,10 @@
     @media only screen and (max-width: 600px) {
         .button-fullscreen{
             display: none;
+        }
+
+        .helix-display canvas{
+            pointer-events: none;
         }
     }
 </style>

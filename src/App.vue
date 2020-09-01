@@ -335,9 +335,37 @@ export default {
       margin-left: 1rem;
     }
 
-    .layout-left{
-      margin: 0.1rem;
-      margin-top: 1rem;
+    footer{
+      grid-row: 4;
+      grid-column: 1;
+    }
+
+    .layout-box{  /*we change the grid layout*/
+      grid-template:  1fr  / auto auto 1fr auto ;
+    }
+
+    .layout-left {
+      grid-row: 2;
+      grid-column: 1;
+
+      display: flex;
+      margin: 0;
+      padding: 0.1rem 0.7rem;
+      font-size: 15px;
+      justify-content: space-between;
+      width: 100vw;
+    }
+
+    .rotated{
+      writing-mode: horizontal-tb;
+      transform: rotate(0);
+      margin: 0;
+      padding: 0;
+      width: 100%;
+    }
+
+    .layout-right{
+      display: none;
     }
 
     .card{
@@ -348,13 +376,10 @@ export default {
       padding: 0;
     }
 
-
-    .layout-left{
-      /*display: none;*/
-    }
-
     .layout-central{
-      margin: 3px;
+      margin: 0.2rem;
+      grid-column: 1;
+      grid-row: 3;
     }
 
     .card-title{
