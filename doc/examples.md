@@ -6,6 +6,8 @@ Below are some example `helix-families` (a collection of helices that make up a 
 
 *The default example in `helix-FFT`, the diffraction pattern of the `double` helix features the characteristic missing layer-line (@ n=3) as observed experimentally in Rosalind Franklin's famous 'Photo 51'*
 
+## Protein Filaments
+
 ### F-Actin - [open model](https://nemoandrea.github.io/helixiser/#name=F-actin&n=6&m=3&s=0.19###&radius=2.5&rise=2.75&frequency=2.166&unit_size=3&offset=0&rotation=0&handedness=right)
 
 *A ubiquitous helical filament in cells, F-actin is a `single` helix that can, due to the large angle between subunits, be seen as two slowly turning helices.*
@@ -26,11 +28,22 @@ Below are some example `helix-families` (a collection of helices that make up a 
 
 *the 12 protofilament MT also makes a three start helix, but to accommodate one less protofilament, the number of subunits per pitch is no longer an integer value, and the whole lattice starts to slowly twist (tilt of the MT 'seam'). For the 12PF MT, the seam makes a **left** handed helix.*  
 
+## Viruses
+
+### Filamentous Archea viruses [2]
+*Double stranded DNA viruses that infect archaeal hosts. Their archeal hosts are hyperthermophiles (i.e. live in extremely hot environments). The DNA is maintained in A-form inside the subunits. The DNA is not considered in the models below, which simply show the protein subunits that make up the filament. For more details on the biology, consult [2].*
+* SIRV2 (archea virus) [open model](https://nemoandrea.github.io/helixiser/#name=SIRV2&n=20&m=1&s=0.65###&radius=6.1&rise=0.291&frequency=14.6&unit_size=1.7)
+* SSRV1 (archea virus) [open model](https://nemoandrea.github.io/helixiser/#name=SSRV1&n=20&m=1&s=0.65###&radius=6.1&rise=0.294&frequency=14.66&unit_size=1.7)
+* SFV1 (archea virus) [open model](https://nemoandrea.github.io/helixiser/#name=SFV1&n=20&m=1&s=0.65###&radius=7.5&rise=0.276&frequency=17.14&unit_size=1.8) 
+* PFV2 (archea virus) [open model](https://nemoandrea.github.io/helixiser/#name=PFV2&n=20&m=1&s=0.65###&radius=6.7&rise=0.286&frequency=15.70&unit_size=1.8)
+* AFV1 (archea virus) [open model](https://nemoandrea.github.io/helixiser/#name=AFV1&n=20&m=1&s=0.39###&radius=4.2&rise=0.46&frequency=9.3&unit_size=1.9)
+* SIFV (archea virus) [open model](https://nemoandrea.github.io/helixiser/#name=SIFV&n=20&m=1&s=0.39###&radius=4.2&rise=0.548&frequency=9.34&unit_size=2)
 
 ## References for model parameters
 
 ```
 [1] Chrétien, Denis, et al. "Determination of microtubule polarity by cryo-electron microscopy." Structure 4.9 (1996): 1031-1040.
+[2] Wang, Fengbin, et al. "Structures of filamentous viruses infecting hyperthermophilic archaea explain DNA stabilization in extreme environments." Proceedings of the National Academy of Sciences 117.33 (2020): 19643-19652.
 ```
 
 
