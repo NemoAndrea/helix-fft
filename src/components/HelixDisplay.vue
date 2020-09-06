@@ -195,11 +195,12 @@
                 animate()
             },
 
-            refreshDisplay(container) {
+            refreshDisplay(container) {  //
                 console.log('Refreshing aspect ratio plot');
-                this.camera.aspect = container.offsetWidth / container.clientHeight ;
+                this.camera.aspect = container.offsetWidth / container.offsetHeight ;
+
                 this.camera.updateProjectionMatrix();
-                this.renderer.setSize( container.offsetWidth, container.clientHeight  );
+                this.renderer.setSize( container.offsetWidth, container.offsetHeight  );
             },
 
             toggleFullscreen(){
@@ -208,13 +209,15 @@
                 let card = document.querySelector( '.ui-realspace-panel' );
 
                 if (this.fullscreen) {
-                    console.log('going fullscreen, baby');
+                    console.log('[realspace helix] going fullscreen');
                     card.style.position = 'absolute';
                     card.style.width = '90vw';
+                    card.style.height = '80vh';  // bit of a bodge
                 } else {
-                    console.log('leaving fullscreen');
+                    console.log('[realspace helix] leaving fullscreen');
                     card.style.position = 'static';
                     card.style.width = '0px';
+                    card.style.height = 'auto';
                 }
                 this.refreshDisplay(this.container)
             }
@@ -239,7 +242,15 @@
         display: flex;
         justify-content: space-between;
         width: 100%;
-        bottom: 10px
+        bottom: 10px;
+        z-index: 2;
+    }
+
+    .helix-display canvas{
+        position:absolute;
+        top:0;
+        left:0;
+        z-index: 1;
     }
 
     @media only screen and (max-width: 600px) {

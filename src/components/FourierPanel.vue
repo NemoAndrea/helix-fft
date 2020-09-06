@@ -3,12 +3,52 @@
         <div class="card card-display">
             <div class="display-controls-header">
                 <div class="card-title">Diffraction Display Controls</div>
-                <v-tooltip bottom >
-                    <template v-slot:activator="{ on }">
-                        <v-icon v-on="on" @click="update_plot_scale(true)"> mdi-arrow-split-horizontal</v-icon>
-                    </template>
-                    <span>resize diffraction plot to fit current n</span>
-                </v-tooltip>
+                <div class="display-controls-drawer">
+                    <v-menu left bottom :close-on-click=true transition="slide-y-transition" :offset-y=true >
+                        <template v-slot:activator="{ on: menu, attrs }">
+                            <v-tooltip bottom>
+                                <template v-slot:activator="{ on: tooltip }">
+                                    <v-btn v-bind="attrs" icon v-on="{ ...tooltip, ...menu }" class="display-controls-button">
+                                        <v-icon > mdi-tape-measure </v-icon>
+                                    </v-btn>
+                                </template>
+                                <span> Distance measurement settings </span>
+                            </v-tooltip>
+                        </template>
+
+
+                        <v-list shaped>
+                            <v-subheader>OVERLAY SETTINGS</v-subheader>
+                            <v-list-item ripple>
+                                <v-checkbox
+                                        v-model="coordinates['hidden']"
+                                        label="Hide distances"
+                                ></v-checkbox>
+                            </v-list-item>
+                            <v-subheader>DISPLAY STYLE</v-subheader>
+                            <v-list-item ripple>
+                                <v-radio-group v-model="coordinates_as_frequency">
+                                    <v-radio label="frequency [1/nm]" :value="true"></v-radio>
+                                    <v-radio label="wavelength (1/f)" :value="false"></v-radio>
+                                </v-radio-group>
+                            </v-list-item>
+                        </v-list>
+                    </v-menu>
+
+                    <!--                <v-tooltip bottom >-->
+                    <!--                    <template v-slot:activator="{ on }">-->
+                    <!--                        <v-icon v-on="on" class="display-controls-button"> mdi-currency-eth </v-icon>-->
+                    <!--                    </template>-->
+                    <!--                    <span> Toggle overlay first zeros of analytic solution</span>-->
+                    <!--                </v-tooltip>-->
+                    <v-tooltip bottom >
+                        <template v-slot:activator="{ on }">
+                            <v-icon v-on="on" @click="update_plot_scale(true)"
+                                    class="display-controls-button"> mdi-arrow-split-horizontal</v-icon>
+                        </template>
+                        <span>resize diffraction plot to fit current n</span>
+                    </v-tooltip>
+                </div>
             </div>
             <div>
                 <v-range-slider
@@ -41,14 +81,14 @@
                 <div class="fft-card-header-left">
                     <div class="card-title">Diffraction pattern (analytic)</div>
                     <div v-if="updateCounter>0"> <!--check we have an image. Not perfect but fine for most cases.-->
-                    <v-tooltip bottom>
-                        <template v-slot:activator="{ on }">
-                            <a id="download-anchor">
-                            <v-icon v-on="on" @click="download_fft()" class="download"> mdi-download </v-icon>
-                            </a>
-                        </template>
-                        <span>Download FFT image</span>
-                    </v-tooltip>
+                        <v-tooltip bottom>
+                            <template v-slot:activator="{ on }">
+                                <a id="download-anchor">
+                                    <v-icon v-on="on" @click="download_fft()" class="download"> mdi-download </v-icon>
+                                </a>
+                            </template>
+                            <span>Download FFT image</span>
+                        </v-tooltip>
                     </div>
                 </div>
                 <div class="order-dropdown-container">
@@ -78,15 +118,22 @@
                     </div>
                 </div>
             </div>
-            <div class="rasterImage"></div>
+            <div style="margin: 0.5rem"><div class="image-container">
+                <canvas class="rasterImage"></canvas>
+                <!--style="background-color: red; opacity: 30%"-->
+                <svg class="rasterImageOverlay"  ></svg>
+                <div v-show="!coordinates['hidden'] && this.updateCounter > 0" class="coordinates-overlay">
+                    <div v-if="coordinates_as_frequency"> f: {{coordinates['d'].toFixed(2)}} 1/nm (z: {{coordinates['z'].toFixed(2)}} 1/nm, r: {{coordinates['r'].toFixed(2)}} 1/nm) </div>
+                    <div v-if="!coordinates_as_frequency"> 1/f: {{coordinates['d'].toFixed(2)}} nm (z: {{coordinates['z'].toFixed(2)}} nm, r: {{coordinates['r'].toFixed(2)}} nm)</div>
+                </div>
+            </div></div>
         </div>
 
     </div>
-
 </template>
 
 <script>
-    import Panzoom from '@panzoom/panzoom'
+    import * as d3 from "d3";
 
     export default {
         name: "FourierPanel",
@@ -114,15 +161,15 @@
         data: () => ({
             analyticFFT: '',
             n_order: 5,
-            n_order_list: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],  // allowed values for n
+            n_order_list: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25],  // allowed values for n
             m_order: 0,
             m_order_list: [0,1,2,3,4,5,6,7],   // allowed values for +- m
             canvas: '',
+            overlay: '',
             ctx: '',
             rasterSize: 512,
             plot_scale: 0.01,
             camera: '',
-            container: '',
             scene: '',
             contrast: { 'range':[0, 255], 'contrast':1, 'offset':0 },
             imageData: [],
@@ -130,7 +177,9 @@
             image: '',
             wasm: '',
             wasm_contrast: '',
-            wasm_fft_analytic: ''
+            wasm_fft_analytic: '',
+            coordinates_as_frequency: false,
+            coordinates: {'d': 0, 'z': 0, 'r': 0, 'hidden': false}
         }),
         methods: {
             updateFFT( autoscale ){
@@ -219,14 +268,49 @@
                 }
             },
 
+            updateMouseCoordinate( event ){
+                const pointer = d3.pointer(event);
+                const x = ( Math.round(pointer[0]) ) * this.plot_scale;
+                const y = ( Math.round(pointer[1]) ) * this.plot_scale;
+
+
+                if ( this.coordinates_as_frequency ) {  // display as values with units 1/distance (Frequency)
+                    this.coordinates['d'] = Math.round( Math.sqrt(x**2 + y**2) * 100)/100;
+                    this.coordinates['z'] =  Math.abs(Math.round( y*100 ) / 100);
+                    this.coordinates['r'] =  Math.abs(Math.round( x*100 ) / 100);
+                }
+                else {  //  vales are inverted to go from frequency to distance
+                    this.coordinates['d'] = Math.round( 1 / Math.sqrt(x**2 + y**2) * 100)/100;
+                    this.coordinates['z'] =  Math.abs(Math.round( (1/y)*100 ) / 100);
+                    this.coordinates['r'] =  Math.abs(Math.round( (1/x)*100 ) / 100);
+                }
+            },
+
+            zoomDiffractionPlot(transform){
+                const scale = transform.k;
+
+                // for the .rasterImageOverlay (svg)
+                this.overlay.attr("transform", transform);
+
+                // for the .rasterImage (canvas)
+                const newWidth  = this.rasterSize*scale;
+                const newHeight = this.rasterSize*scale;
+                this.ctx.save();
+                this.ctx.clearRect(0, 0, this.rasterSize, this.rasterSize);
+                this.ctx.translate( -((newWidth-this.rasterSize )/2) + transform.x,
+                    -((newHeight-this.rasterSize)/2) + transform.y );
+                this.ctx.scale(scale, scale);
+                this.ctx.drawImage(this.image, 0, 0, this.rasterSize, this.rasterSize);  // draw diffraction image
+                this.ctx.restore()
+            },
+
             async loadWASMfuncs (){
                 this.wasm_contrast = (await this.wasm).wasm_adjust_contrast;
                 this.wasm_fft_analytic = (await this.wasm).wasm_diffraction_analytic;
-
-            },
+            }
         },
         async mounted() {
-            this.canvas = document.createElement( 'canvas' );
+            this.canvas = document.querySelector( '.rasterImage' );
             this.canvas.width = this.rasterSize;
             this.canvas.height = this.rasterSize;
             this.ctx = this.canvas.getContext( '2d' );
@@ -237,21 +321,23 @@
 
             this.image = new Image();
             this.image.src = this.canvas.toDataURL(); // produces a PNG file
-            document.querySelector( '.rasterImage' ).appendChild( this.image );
-            this.image.style.position = 'absolute';
-            this.image.style.width = '100%';
-            this.image.style.height = '100%';
-            this.image.style.objectFit = 'contain';
-
-            const panzoom = Panzoom(this.image, {
-                minScale: 1,
-            });
-            this.image.parentElement.addEventListener('wheel', panzoom.zoomWithWheel);
+            this.ctx.drawImage(this.image, 0, 0, 512, 512);  // draw diffraction image
 
             await this.loadWASMfuncs();
             this.setDisplayParams();  // set the external display paramters (loaded from URL)
 
-            console.log('[ Fourierpanel mounted ]')
+            console.log('[ Fourierpanel mounted ]');
+
+            // setup the SVG overlay (using D3)
+            this.overlay = d3.select(".rasterImageOverlay")
+                .attr("viewBox", [-this.rasterSize/2, -this.rasterSize/2, this.rasterSize, this.rasterSize])
+                .on("mousemove", (event) => { this.updateMouseCoordinate(event) })
+                .call(d3.zoom()
+                    .extent([[-this.rasterSize/2,-this.rasterSize/2],[this.rasterSize/2-1, this.rasterSize/2-1]])
+                    .scaleExtent([1, 5])
+                    .translateExtent([[-this.rasterSize/2, -this.rasterSize/2], [this.rasterSize/2-1, this.rasterSize/2-1]])
+                    .on("zoom", ({transform}) => this.zoomDiffractionPlot(transform)));
+            this.overlay.node();  // update the SVG
         }
     }
 </script>
@@ -284,17 +370,46 @@
         margin-bottom: 0;
     }
 
-    .rasterImage{
-        flex-grow: 1;
-        height:100%;
-        max-height:100%;
+    .image-container{
         position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    .rasterImage{
+        max-width: 100%;
+        max-height: 100%;
+
+        width: inherit;;
+        position: absolute;
+    }
+
+    .rasterImageOverlay{
+        max-width: 100%;
+        max-height: 100%;
+
+        position: relative;
+        width: inherit;
+
+        cursor: crosshair;
+    }
+
+    .coordinates-overlay{
+        color:  var(--primary);
+        position: absolute;
+        top: 10px;
+        left: 10px;
+
     }
 
     .ui-fft-panel-sub {
         display: grid;
         grid-template-rows: auto 1fr ;
         height: 100%;
+    }
+
+    .display-controls-button{
+        margin-left: 1.2rem;
     }
 
     .fft-card-header{
@@ -316,6 +431,11 @@
     .order-dropdown-container{
         display: flex;
         width: 30%;
+    }
+
+    .display-controls-drawer{
+        display: flex;
+        align-items: center;
     }
 
     .download{
@@ -341,9 +461,6 @@
 
         .fft-card-header{
             margin: 0.5rem 1.5rem 0 1.5rem;
-        }
-        .rasterImage{
-            margin: 0.5rem;
         }
     }
 </style>
