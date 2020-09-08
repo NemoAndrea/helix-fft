@@ -1,20 +1,31 @@
 // Image Adjustment functions
+use crate::wasm_functions::alert;
 
 
 pub fn adjust_contrast(image_data: Vec<f64>, offset: f64, min: f64, max: f64) -> Vec<f64> {
-    let val_range: f64 = 256 as f64 / (max - min);
+    let val_range: f64 = 256f64 / (max - min);
 
-    let mut new_image_data: Vec<f64> = vec![0 as f64; image_data.len()];
-    for i in (0..image_data.len()).step_by(4) {
-        let val: f64 = (image_data[i] - min + offset) * val_range;
-        new_image_data[i] = val as f64;  // set Red
-        new_image_data[i + 1] = val as f64;  // set Green
-        new_image_data[i + 2] = val as f64;  // set Blue
-        new_image_data[i + 3] = 255 as f64;  // set Alpha
+    // compute the rescaled array
+    let rescaled_data: Vec<f64> = image_data.iter().step_by(4)
+        .map(|val| (val - min + offset) * val_range).collect();
+    // make into appropriate format
+    let test = arr_to_rgba(rescaled_data);
+
+
+    // alert(&test.len().to_string());
+    return test
+}
+
+pub fn arr_to_rgba(luminance: Vec<f64>) -> Vec<f64>{
+    // we need a vector that is 4 times the length of the luminance (red, green, blue, alpha)
+    let mut rgba: Vec<f64> = vec![0f64; luminance.len()*4];
+    for i in 0..luminance.len() {
+        rgba[i*4    ] = luminance[i];  // set Red
+        rgba[i*4 + 1] = luminance[i];  // set Green
+        rgba[i*4 + 2] = luminance[i];  // set Blue
+        rgba[i*4 + 3] = 255f64;        // set Alpha
     }
-
-    // return new contrast
-    new_image_data
+    return rgba
 }
 
 

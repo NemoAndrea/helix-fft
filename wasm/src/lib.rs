@@ -13,3 +13,4 @@ pub mod bessel_utils;
 pub mod display;
 pub mod analytic_diffraction;
 pub mod wasm_functions;
+pub mod fft_2D;

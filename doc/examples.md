@@ -30,7 +30,14 @@ Below are some example `helix-families` (a collection of helices that make up a 
 
 ## Viruses
 
+
+
+### Tobacco Mosaic Virus (TMV) [open model](https://nemoandrea.github.io/helixiser/#name=Tobacco%20Mosaic%20Virus%20&n=20&m=1&s=0.6###&radius=7&rise=0.114&frequency=16.333&unit_size=0.7&offset=0&rotation=0&handedness=right&radius=4&rise=0.114&frequency=16.333&unit_size=1&offset=0.75&rotation=0&handedness=right&radius=5&rise=0.114&frequency=16.333&unit_size=0.7&offset=0.5&rotation=0&handedness=right&radius=6&rise=0.114&frequency=16.333&unit_size=0.7&offset=0.25&rotation=0&handedness=right)
+
+*Single stranded RNA plant virus. Quite a bit of liberty has been taken in this example with the 'densities' of the protein. Parameters based on [3]*
+
 ### Filamentous Archea viruses [2]
+
 *Double stranded DNA viruses that infect archaeal hosts. Their archeal hosts are hyperthermophiles (i.e. live in extremely hot environments). The DNA is maintained in A-form inside the subunits. The DNA is not considered in the models below, which simply show the protein subunits that make up the filament. For more details on the biology, consult [2].*
 * SIRV2 (archea virus) [open model](https://nemoandrea.github.io/helixiser/#name=SIRV2&n=20&m=1&s=0.65###&radius=6.1&rise=0.291&frequency=14.6&unit_size=1.7)
 * SSRV1 (archea virus) [open model](https://nemoandrea.github.io/helixiser/#name=SSRV1&n=20&m=1&s=0.65###&radius=6.1&rise=0.294&frequency=14.66&unit_size=1.7)
@@ -44,6 +51,7 @@ Below are some example `helix-families` (a collection of helices that make up a 
 ```
 [1] Chrétien, Denis, et al. "Determination of microtubule polarity by cryo-electron microscopy." Structure 4.9 (1996): 1031-1040.
 [2] Wang, Fengbin, et al. "Structures of filamentous viruses infecting hyperthermophilic archaea explain DNA stabilization in extreme environments." Proceedings of the National Academy of Sciences 117.33 (2020): 19643-19652.
+[3] Gelderblom, Hans R. "Structure and classification of viruses." Medical Microbiology. 4th edition. University of Texas Medical Branch at Galveston, 1996.
 ```
 
 

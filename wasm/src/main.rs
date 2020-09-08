@@ -1,12 +1,20 @@
 use helixiser::analytic_diffraction::{ Helix, Handedness, diff_analytic };
 use helixiser::display::adjust_contrast;
+use helixiser::fft_2D::{ test, FFT_2D };
+
+use rustfft::num_complex::{Complex, Complex64, Complex32};
+use rustfft::num_traits::Zero;
 
 extern crate image;
 
 use std::time::{Duration, Instant};
+use image::GenericImageView;
+
+use ndarray::{Array, Array1, Array2, arr2};
+
 
 fn main () {
-    println!(">>> Example of Helical diffraction, using B-DNA as a model");
+    println!("> Example of Helical diffraction, using B-DNA as a model");
 
     let strand_1 = Helix {
         radius: 1.,
@@ -39,5 +47,21 @@ fn main () {
     let u_im_arr:Vec<u8> = im_arr.iter().map(|val| *val as u8).collect();
 
     // use the [image] crate to save array as an image to the project directory
-    image::save_buffer("B-DNA_via_Rust.png", &u_im_arr, 512, 512, image::ColorType::Rgba8).unwrap()
+    image::save_buffer("B-DNA_via_Rust.png", &u_im_arr, 512, 512, image::ColorType::Rgba8).unwrap();
+
+    ///////////////////////////////////////// FFT
+    println!("> FFT testing ...");
+    let img_obj = image::open("../img/testing/fft_test_diffraction.png").unwrap().grayscale();
+    let img_int:Vec<u8> = img_obj.to_bytes();
+    let img_float:  Vec<Complex64> = img_int.iter().map(|pix| Complex64::new(*pix as f64, 0f64) ).collect();
+
+    let img: Array2<Complex64> = Array::from_shape_vec((512,512),(img_float)).unwrap().into();
+
+    // Compute FFT, take natural log of value and scale so it uses the dynamic range of u8
+    let logged_fft: Vec<f64>= FFT_2D(img).iter().map(|val| val.norm().ln()*20f64).collect();
+
+    // convert to u8 and save as png
+    let out: Vec<u8> = logged_fft.iter().map(|val| *val as u8).collect();
+    image::save_buffer("fft_test_diffraction_out.png", &out, 512, 512, image::ColorType::L8).unwrap();
+    println!("[ Finished saving FFT ]");
 }

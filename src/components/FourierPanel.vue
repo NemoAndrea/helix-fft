@@ -4,6 +4,63 @@
             <div class="display-controls-header">
                 <div class="card-title">Diffraction Display Controls</div>
                 <div class="display-controls-drawer">
+                    <!-- USER IMAGE UPLOAD-->
+                    <v-menu left bottom  transition="slide-y-transition" :offset-y=true
+                            :close-on-content-click=false>
+                        <template v-slot:activator="{ on: menu, attrs }">
+                            <v-tooltip bottom >
+                                <template v-slot:activator="{ on: tooltip }">
+                                    <v-btn v-bind="attrs" icon v-on="{ ...tooltip, ...menu }"
+                                           class="display-controls-button">
+                                        <v-icon > mdi-microscope </v-icon>
+                                    </v-btn>
+                                </template>
+                                <span> Load experimental helix image </span>
+                            </v-tooltip>
+                        </template>
+                        <v-list shaped class="upload-window">
+                            <v-subheader>UPLOAD EXPERIMENTAL IMAGE</v-subheader>
+                            <v-list-item><v-alert type="error">
+                                Only 512x512 images are currently supported!
+                            </v-alert></v-list-item>
+                            <v-list-item ripple>
+                                <div><v-file-input
+                                        :rules="uploadRules"
+                                        filled
+                                        accept="image/png, image/jpeg, image/bmp"
+                                        placeholder="Upload a local image"
+                                        prepend-icon="mdi-camera"
+                                        v-model="imageUpload"
+                                        color="var(--primary)"
+                                        @change="show_preview"
+                                ></v-file-input>
+                                    <img class="upload-preview">
+                                </div>
+                            </v-list-item>
+                            <span v-if="imageUpload!==null">
+                            <v-list-item ripple> <div>
+                                <div class="upload-menu-header">What kind of image is it?</div>
+                                <v-radio-group dense v-model="upload_needs_fourier" class="compact-radio">
+                                    <v-radio label="Realspace" :value=true color="var(--primary)"></v-radio>
+                                    <v-radio label="Diffraction Pattern" :value=false color="var(--primary)"></v-radio>
+                                </v-radio-group></div>
+                             </v-list-item> </span>
+                            <span v-if="upload_needs_fourier!==null"><v-list-item ripple>
+                                    <div><div class="upload-menu-header">Specify pixel size</div>
+                                <v-text-field label="Pixel size"
+                                              :rules="numberRules"
+                                              suffix="nm"
+                                              color="var(--primary)"
+                                              type="number" v-model="uploadScale"></v-text-field></div>
+                            </v-list-item></span>
+                            <span v-if="uploadScale > 0"><v-list-item ripple>
+                                <v-btn v-show="upload_needs_fourier===true" color="var(--primary)" @click="process_upload()">compute FFT and show</v-btn>
+                                <v-btn v-show="upload_needs_fourier===false" color="var(--primary)" @click="process_upload()">show</v-btn>
+                            </v-list-item></span>
+
+                        </v-list>
+                    </v-menu>
+                    <!-- DISTANCE MEASUREMENT SETTINGS-->
                     <v-menu left bottom :close-on-click=true transition="slide-y-transition" :offset-y=true >
                         <template v-slot:activator="{ on: menu, attrs }">
                             <v-tooltip bottom>
@@ -15,8 +72,6 @@
                                 <span> Distance measurement settings </span>
                             </v-tooltip>
                         </template>
-
-
                         <v-list shaped>
                             <v-subheader>OVERLAY SETTINGS</v-subheader>
                             <v-list-item ripple>
@@ -41,6 +96,7 @@
                     <!--                    </template>-->
                     <!--                    <span> Toggle overlay first zeros of analytic solution</span>-->
                     <!--                </v-tooltip>-->
+                    <!-- SET PLOT SCALE -->
                     <v-tooltip bottom >
                         <template v-slot:activator="{ on }">
                             <v-icon v-on="on" @click="update_plot_scale(true)"
@@ -134,6 +190,7 @@
 
 <script>
     import * as d3 from "d3";
+    import { upload_to_rgba } from "../utils/upload_utils";
 
     export default {
         name: "FourierPanel",
@@ -178,8 +235,19 @@
             wasm: '',
             wasm_contrast: '',
             wasm_fft_analytic: '',
+            wasm_fft: '',
             coordinates_as_frequency: false,
-            coordinates: {'d': 0, 'z': 0, 'r': 0, 'hidden': false}
+            coordinates: {'d': 0, 'z': 0, 'r': 0, 'hidden': false},
+            uploadRules: [
+                value => !value || value.size < 2000000 || 'Image size should be less than 2 MB!',
+            ],
+            imageUpload: null,
+            upload_needs_fourier: null,
+            uploadScale: 0,
+            numberRules: [
+                v => !!v || 'parameter is required',
+                v => v > 0 || 'value must be larger than 0',
+            ],
         }),
         methods: {
             updateFFT( autoscale ){
@@ -215,7 +283,7 @@
                 let newImageData = new ImageData(newDataClamped, this.rasterSize, this.rasterSize);
 
                 this.ctx.putImageData( newImageData, 0, 0 );
-                this.image.src = this.canvas.toDataURL(); // produces a PNG file
+                this.image.src = this.canvas.toDataURL();
 
                 console.timeEnd('contrast-wasm');
             },
@@ -268,6 +336,38 @@
                 }
             },
 
+
+            // this function still needs a lot of work, it needs to be able to handle arbitrary dimensions
+            // and adjust the plot based on the pixel size
+            process_upload(){
+                console.log('Processing Uploaded image');
+                const reader = new FileReader();
+
+                reader.onload = () => {
+                    const rgba = upload_to_rgba(reader.result);
+                    let newImageData;
+
+                    // if we have realspace image, we need to take the FFT and show that
+                    // if it is a diffraction pattern, we can just display the image straight away
+                    if (this.upload_needs_fourier) {
+                        console.time('wasm-FFT');
+                        let FFT = this.wasm_fft(rgba);
+                        console.timeEnd('wasm-FFT');
+
+                        // convert types
+                        newImageData = new ImageData(Uint8ClampedArray.from(FFT), this.rasterSize, this.rasterSize);
+                    }
+                    else {  // we dont need to compute FFT, so we just cast our image to the same type
+                        // convert types
+                        newImageData = new ImageData(Uint8ClampedArray.from(rgba), this.rasterSize, this.rasterSize);
+                    }
+
+                    this.ctx.putImageData( newImageData, 0, 0 );
+                    this.image.src = this.canvas.toDataURL();
+                };
+                reader.readAsDataURL(this.imageUpload);
+            },
+
             updateMouseCoordinate( event ){
                 const pointer = d3.pointer(event);
                 const x = ( Math.round(pointer[0]) ) * this.plot_scale;
@@ -304,9 +404,22 @@
                 this.ctx.restore()
             },
 
+            show_preview(){
+                const reader = new FileReader();
+                reader.addEventListener("load", function () {
+                    // convert image file to base64 string
+                    document.querySelector('.upload-preview').src = reader.result;
+                }, false);
+
+                if (this.imageUpload) {
+                    reader.readAsDataURL(this.imageUpload);
+                }
+            },
+
             async loadWASMfuncs (){
                 this.wasm_contrast = (await this.wasm).wasm_adjust_contrast;
                 this.wasm_fft_analytic = (await this.wasm).wasm_diffraction_analytic;
+                this.wasm_fft = (await this.wasm).wasm_FFT;
             }
         },
         async mounted() {
@@ -374,6 +487,7 @@
         position: relative;
         width: 100%;
         height: 100%;
+        overflow: hidden;
     }
 
     .rasterImage{
@@ -390,7 +504,6 @@
 
         position: relative;
         width: inherit;
-
         cursor: crosshair;
     }
 
@@ -440,6 +553,25 @@
 
     .download{
         margin: 4px;
+    }
+
+    .upload-window{
+        width: 22rem;
+    }
+
+    .upload-preview{
+        width: 100%;
+        display: block;
+    }
+
+    .upload-menu-header{
+        color: var(--primary);
+        font-weight: bold;
+        margin-top: 0.2rem;
+    }
+
+    .compact-radio{
+        margin: 0.1rem;
     }
 
     @media only screen and (max-width: 600px) {
