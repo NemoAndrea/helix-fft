@@ -147,7 +147,7 @@ export default {
   },
   methods: {
     loadExample() {
-      window.location.hash += '#name=B-DNA&radius=1&rise=0.34&frequency=10&unit_size=0.18' +
+      window.location.hash += '#name=B-DNA&m=1###&radius=1&rise=0.34&frequency=10&unit_size=0.18' +
               '&radius=1&rise=0.34&frequency=10&unit_size=0.18&rotation=143';
       location.reload()
     },
@@ -309,7 +309,6 @@ export default {
     padding: 0;
     position: relative;
     overflow: hidden;
-
   }
 
   .card-display{

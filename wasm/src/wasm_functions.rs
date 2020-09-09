@@ -57,12 +57,6 @@ pub fn wasm_diffraction_analytic(helix_family: &JsValue, n_range: u8, m_range: u
     diff_analytic(helices, n_range, m_range, scale, raster_size)
 }
 
-
-#[wasm_bindgen]  // just a wrapper for the main adjust_contrast() function
-pub fn wasm_adjust_contrast(image_data: Vec<f64>, offset: f64, min: f64, max: f64) -> Vec<f64> {
-    adjust_contrast(image_data, offset, min, max)
-}
-
 #[wasm_bindgen]  // calculate FFT of image (return the norm of complex-valued fourier transform)
 pub fn wasm_FFT(image: Vec<f64>) -> Vec<f64> {
     let mut data: Vec<u8> = image.iter().step_by(4).map(|val| *val as u8).collect();

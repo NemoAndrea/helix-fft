@@ -3,7 +3,16 @@
         <div class="card card-display">
             <div class="display-controls-header">
                 <div class="card-title">Diffraction Display Controls</div>
+
                 <div class="display-controls-drawer">
+                    <!--LUT manager -->
+                    <LutManager :context2D="ctx" ref="LUTs"
+                                :img="image"
+                                :max="LUT_settings['range'][1]/255"
+                                :min="LUT_settings['range'][0]/255"
+                                :offset="LUT_settings['offset']"
+                                :gamma="LUT_settings['gamma']"
+                                v-on:lut_update="zoomDiffractionPlot(lastTransform)"/>
                     <!-- USER IMAGE UPLOAD-->
                     <v-menu left bottom  transition="slide-y-transition" :offset-y=true
                             :close-on-content-click=false>
@@ -108,7 +117,7 @@
             </div>
             <div>
                 <v-range-slider
-                        v-model="contrast['range']"
+                        v-model="LUT_settings['range']"
                         thumb-label
                         label="Range"
                         :max=255
@@ -117,18 +126,29 @@
                         class="align-center"
                         color="var(--primary)"
                         track-color="darkgrey"
-                        @end="updateContrast"
                 />
-                <v-slider class="ma-0 pa-0"
-                          thumb-label
-                          label="Offset"
-                          v-model="contrast['offset']"
-                          :max=128
-                          :min=-128
-                          color="var(--primary)"
-                          track-color="darkgrey"
-                          @end="updateContrast"
-                />
+                <div class="side-by-side-slider">
+                    <v-slider class="ma-0 pa-0"
+                                thumb-label
+                                label="Offset"
+                                v-model="LUT_settings['offset']"
+                                :max=1
+                                :min=-1
+                                :step=0.05
+                                color="var(--primary)"
+                                track-color="darkgrey"
+                    />
+                    <v-slider class="ma-0 pa-0"
+                              thumb-label
+                              label="Gamma"
+                              v-model="LUT_settings['gamma']"
+                              :max=5
+                              :min=0.1
+                              :step=0.1
+                              color="var(--primary)"
+                              track-color="darkgrey"
+                    />
+                </div>
             </div>
         </div>
 
@@ -189,11 +209,13 @@
 </template>
 
 <script>
+    import LutManager from "./LutManager";
     import * as d3 from "d3";
     import { upload_to_rgba } from "../utils/upload_utils";
 
     export default {
         name: "FourierPanel",
+        components: {LutManager},
         props: {
             helixFamily: {
                 type: Array,
@@ -221,19 +243,18 @@
             n_order_list: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25],  // allowed values for n
             m_order: 0,
             m_order_list: [0,1,2,3,4,5,6,7],   // allowed values for +- m
-            canvas: '',
-            overlay: '',
-            ctx: '',
+            canvas: null,
+            overlay: null,
+            ctx: null,
             rasterSize: 512,
             plot_scale: 0.01,
             camera: '',
             scene: '',
-            contrast: { 'range':[0, 255], 'contrast':1, 'offset':0 },
+            LUT_settings: { 'range':[0, 255], 'offset':0, 'gamma': 1 },
             imageData: [],
             imageDataTest: [],
-            image: '',
+            image: null,
             wasm: '',
-            wasm_contrast: '',
             wasm_fft_analytic: '',
             wasm_fft: '',
             coordinates_as_frequency: false,
@@ -248,6 +269,7 @@
                 v => !!v || 'parameter is required',
                 v => v > 0 || 'value must be larger than 0',
             ],
+            lastTransform: null,
         }),
         methods: {
             updateFFT( autoscale ){
@@ -274,18 +296,13 @@
                 if (redraw) { this.updateFFT(); }
             },
 
-            updateContrast() {
-                console.time('contrast-wasm');
-                const newdata = this.wasm_contrast(this.imageDataTest, this.contrast['offset'] ,this.contrast['range'][0], this.contrast['range'][1]);
-
-                // convert types
-                let newDataClamped = Uint8ClampedArray.from(newdata);
-                let newImageData = new ImageData(newDataClamped, this.rasterSize, this.rasterSize);
-
-                this.ctx.putImageData( newImageData, 0, 0 );
-                this.image.src = this.canvas.toDataURL();
-
-                console.timeEnd('contrast-wasm');
+            updateContrast() {  // manual application of LUTs. Should be called when new image is loaded.
+                console.log('refreshing image contrast');
+                this.$nextTick(() => {
+                    // This code runs after the DOM has been updated.
+                    //  we need to wait for the DOM to be updated (after we set a new image) before we can apply LUTs
+                    this.$refs.LUTs.updateImage()
+                });
             },
 
             download_fft(){
@@ -343,6 +360,7 @@
                 console.log('Processing Uploaded image');
                 const reader = new FileReader();
 
+                reader.readAsDataURL(this.imageUpload);
                 reader.onload = () => {
                     const rgba = upload_to_rgba(reader.result);
                     let newImageData;
@@ -359,13 +377,14 @@
                     }
                     else {  // we dont need to compute FFT, so we just cast our image to the same type
                         // convert types
-                        newImageData = new ImageData(Uint8ClampedArray.from(rgba), this.rasterSize, this.rasterSize);
+                        newImageData = new ImageData( Uint8ClampedArray.from(rgba), this.rasterSize, this.rasterSize);
                     }
 
                     this.ctx.putImageData( newImageData, 0, 0 );
                     this.image.src = this.canvas.toDataURL();
+                    this.updateContrast();
                 };
-                reader.readAsDataURL(this.imageUpload);
+
             },
 
             updateMouseCoordinate( event ){
@@ -387,6 +406,7 @@
             },
 
             zoomDiffractionPlot(transform){
+                this.lastTransform = transform;
                 const scale = transform.k;
 
                 // for the .rasterImageOverlay (svg)
@@ -417,7 +437,6 @@
             },
 
             async loadWASMfuncs (){
-                this.wasm_contrast = (await this.wasm).wasm_adjust_contrast;
                 this.wasm_fft_analytic = (await this.wasm).wasm_diffraction_analytic;
                 this.wasm_fft = (await this.wasm).wasm_FFT;
             }
@@ -427,6 +446,7 @@
             this.canvas.width = this.rasterSize;
             this.canvas.height = this.rasterSize;
             this.ctx = this.canvas.getContext( '2d' );
+            this.ctx.imageSmoothingEnabled = false;  // ensure we have clear pixelation (no smoothing)
 
             this.wasm = import("../../wasm/pkg");
 
@@ -574,6 +594,10 @@
         margin: 0.1rem;
     }
 
+    .side-by-side-slider{
+        display: flex;
+    }
+
     @media only screen and (max-width: 600px) {
         .card-fft{
             height:120vw;
@@ -593,6 +617,10 @@
 
         .fft-card-header{
             margin: 0.5rem 1.5rem 0 1.5rem;
+        }
+
+        .upload-window{
+            width: auto;
         }
     }
 </style>
