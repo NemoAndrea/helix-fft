@@ -14,7 +14,10 @@
         <v-list shaped>
             <v-subheader>CHOOSE LUT</v-subheader>
             <v-list-item>
-                <v-radio-group v-model="LUT">
+                <v-radio-group v-if="current_image===ImageType.ANALYTIC"  v-model="LUT_analytic">
+                        <v-radio color="var(--primary)" v-for="lut in LUT_list" :key="lut" :label="lut" :value="lut" />
+                </v-radio-group>
+                <v-radio-group v-if="current_image===ImageType.EXPERIMENTAL"  v-model="LUT_upload">
                         <v-radio color="var(--primary)" v-for="lut in LUT_list" :key="lut" :label="lut" :value="lut" />
                 </v-radio-group>
             </v-list-item>
@@ -65,6 +68,14 @@
             </feComponentTransfer>
         </filter>
 
+        <filter id="green">
+            <feComponentTransfer color-interpolation-filters="sRGB">
+                <feFuncR type="table" tableValues="0 0"></feFuncR>
+                <feFuncG type="table" tableValues="0 1"></feFuncG>
+                <feFuncB type="table" tableValues="0 0"></feFuncB>
+            </feComponentTransfer>
+        </filter>
+
         <filter id="red">
             <feComponentTransfer color-interpolation-filters="sRGB">
                 <feFuncR type="table" tableValues="0 1"></feFuncR>
@@ -74,11 +85,19 @@
         </filter>
 
     <!--Functions-->
-        <filter id="minmax"> <!--arguments? arg1, arg2-->
+        <filter id="minmax_a"> <!-- Filter for the analytic image -->
           <feComponentTransfer>
-              <feFuncR type="gamma" :exponent="gamma" :amplitude="1 / (max - min)" :offset="-1 / ( max - min) * (min) + offset"/>
-              <feFuncG type="gamma" :exponent="gamma" :amplitude="1 / (max - min)" :offset="-1 / ( max - min) * (min) + offset"/>
-              <feFuncB type="gamma" :exponent="gamma" :amplitude="1 / (max - min)" :offset="-1 / ( max - min) * (min) + offset"/>
+              <feFuncR type="gamma" :exponent="gamma_ana" :amplitude="1 / (max_ana - min_ana)" :offset="-1 / ( max_ana - min_ana) * (min_ana) + offset_ana"/>
+              <feFuncG type="gamma" :exponent="gamma_ana" :amplitude="1 / (max_ana - min_ana)" :offset="-1 / ( max_ana - min_ana) * (min_ana) + offset_ana"/>
+              <feFuncB type="gamma" :exponent="gamma_ana" :amplitude="1 / (max_ana - min_ana)" :offset="-1 / ( max_ana - min_ana) * (min_ana) + offset_ana"/>
+          </feComponentTransfer>
+        </filter>
+
+        <filter id="minmax_b"> <!-- Filter for the experimental (uploaded) image -->
+          <feComponentTransfer>
+              <feFuncR type="gamma" :exponent="gamma_upl" :amplitude="1 / (max_upl - min_upl)" :offset="-1 / ( max_upl - min_upl) * (min_upl) + offset_upl"/>
+              <feFuncG type="gamma" :exponent="gamma_upl" :amplitude="1 / (max_upl - min_upl)" :offset="-1 / ( max_upl - min_upl) * (min_upl) + offset_upl"/>
+              <feFuncB type="gamma" :exponent="gamma_upl" :amplitude="1 / (max_upl - min_upl)" :offset="-1 / ( max_upl - min_upl) * (min_upl) + offset_upl"/>
           </feComponentTransfer>
         </filter>
     </svg>
@@ -86,68 +105,70 @@
 </template>
 
 <script>
+    import { ImageType } from "../utils/upload_utils";
     export default {
         name: "LutManager",
         props: {
-            contrast:{
-                type: String,
-                default: '100%'
-            },
-            context2D:{
-                type: CanvasRenderingContext2D
-            },
-            img: {
-                type: HTMLImageElement
-            },
-            min: {
+            min_ana: {
                 type: Number,
                 default: 0
             },
-            max: {
+            max_ana: {
                 type: Number,
                 default: 1
             },
-            offset: {
+            offset_ana: {
                 type: Number,
                 default: 0
             },
-            gamma: {
+            gamma_ana: {
                 type: Number,
                 default: 1
-            }
-        },
-        watch: {
-            LUT: {
-                handler: function () { this.updateImage() }
             },
-            max: {
-                handler: function () { this.updateImage() }
+            min_upl: {
+                type: Number,
+                default: 0
             },
-            min: {
-                handler: function () { this.updateImage() }
+            max_upl: {
+                type: Number,
+                default: 1
             },
-            offset: {
-                handler: function () { this.updateImage() }
+            offset_upl: {
+                type: Number,
+                default: 0
             },
-            gamma: {
-                handler: function () { this.updateImage() }
+            gamma_upl: {
+                type: Number,
+                default: 1
+            },
+            current_image: {
+                type: Number,
+                default: ImageType.ANALYTIC
             }
         },
         data: () => ({
-            LUT: 'grayscale',
-            LUT_list: ['grayscale', 'inferno', 'mako', 'cyan', 'magenta','red'],
+            LUT_analytic: 'grayscale',  // Current lut selection for the analytic image
+            LUT_upload : 'grayscale',   // Current lut selection for the experimental (uploaded) image
+            LUT_list: ['grayscale', 'inferno', 'mako', 'cyan', 'magenta','red', 'green'],
             filterString: '',
+            ImageType: ImageType
         }),
         methods: {
-            updateImage() {
-                const filterString = `url(#minmax) url(#${this.LUT})`;
-                this.context2D.filter = filterString;
-                this.context2D.drawImage(this.img, 0, 0, 512, 512);  // draw diffraction image
+            buildFilterString(){
+                const filterStringAnalytic = `url(#minmax_a) url(#${this.LUT_analytic})`;
+                const filterStringUpload =  `url(#minmax_b) url(#${this.LUT_upload})`;
+                this.$emit('new_filter_string', [filterStringAnalytic, filterStringUpload]) // send string to parent components
                 this.$emit('lut_update') // we need to trigger event to make sure the updated plot is zoomed and panned after update
-            }
+            },
         },
         mounted() {
             console.log('[LUT manager loaded]')
+            // set up watches
+            for ( const property of ['LUT_analytic', 'LUT_upload', 'max_ana', 'min_ana', 'offset_ana',
+                'gamma_ana', 'max_upl', 'min_upl', 'offset_upl', 'gamma_upl'] ) {
+                // watch
+                this.$watch(property, this.buildFilterString);
+            }
         }
     }
 </script>

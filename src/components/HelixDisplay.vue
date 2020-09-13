@@ -251,6 +251,7 @@
         top:0;
         left:0;
         z-index: 1;
+        outline: none
     }
 
     @media only screen and (max-width: 600px) {

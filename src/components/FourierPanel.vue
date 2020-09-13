@@ -2,17 +2,42 @@
     <div class="ui-fft-panel-sub">
         <div class="card card-display">
             <div class="display-controls-header">
-                <div class="card-title">Diffraction Display Controls</div>
-
+                <div class="card-title">Display Controls <span style="color: #c5c5c5">for</span>&nbsp;
+                    <v-tooltip top>
+                        <template v-slot:activator="{ on }">
+                                <span class="current_LUT_image highlight" v-on="on"
+                                      v-show="current_LUT_image === ImageType.ANALYTIC"
+                                      @click="current_LUT_image = ImageType.EXPERIMENTAL">
+                                    Analytic
+                                </span>
+                        </template>
+                        <span>Switch to experimental image controls</span>
+                    </v-tooltip>
+                    <v-tooltip top>
+                        <template v-slot:activator="{ on }">
+                                <span class="current_LUT_image highlight" v-on="on"
+                                      v-show="current_LUT_image === ImageType.EXPERIMENTAL"
+                                      @click="current_LUT_image = ImageType.ANALYTIC">
+                                    Experimental
+                                </span>
+                        </template>
+                        <span>Switch to analytic image controls</span>
+                    </v-tooltip>
+                </div>
                 <div class="display-controls-drawer">
                     <!--LUT manager -->
-                    <LutManager :context2D="ctx" ref="LUTs"
-                                :img="image"
-                                :max="LUT_settings['range'][1]/255"
-                                :min="LUT_settings['range'][0]/255"
-                                :offset="LUT_settings['offset']"
-                                :gamma="LUT_settings['gamma']"
-                                v-on:lut_update="zoomDiffractionPlot(lastTransform)"/>
+                    <LutManager :max_ana="LUT_settings_ana['range'][1]/255"
+                                :min_ana="LUT_settings_ana['range'][0]/255"
+                                :offset_ana="LUT_settings_ana['offset']"
+                                :gamma_ana="LUT_settings_ana['gamma']"
+                                :max_upl="LUT_settings_upl['range'][1]/255"
+                                :min_upl="LUT_settings_upl['range'][0]/255"
+                                :offset_upl="LUT_settings_upl['offset']"
+                                :gamma_upl="LUT_settings_upl['gamma']"
+                                :current_image = current_LUT_image
+                                v-on:new_filter_string="filterStrings = arguments[0]"
+                                v-on:lut_update="zoomDiffractionPlot(lastTransform)"
+                                ref="LUTmanager"/>
                     <!-- USER IMAGE UPLOAD-->
                     <v-menu left bottom  transition="slide-y-transition" :offset-y=true
                             :close-on-content-click=false>
@@ -24,7 +49,7 @@
                                         <v-icon > mdi-microscope </v-icon>
                                     </v-btn>
                                 </template>
-                                <span> Load experimental helix image </span>
+                                <span> Upload experimental helix image </span>
                             </v-tooltip>
                         </template>
                         <v-list shaped class="upload-window">
@@ -101,7 +126,7 @@
 
                     <!--                <v-tooltip bottom >-->
                     <!--                    <template v-slot:activator="{ on }">-->
-                    <!--                        <v-icon v-on="on" class="display-controls-button"> mdi-currency-eth </v-icon>-->
+                    <!--                        <v-icon v-on="on" class="display-controls-button"> mdi-currency-eth OR mdi-altimeter </v-icon>-->
                     <!--                    </template>-->
                     <!--                    <span> Toggle overlay first zeros of analytic solution</span>-->
                     <!--                </v-tooltip>-->
@@ -115,41 +140,82 @@
                     </v-tooltip>
                 </div>
             </div>
-            <div>
-                <v-range-slider
-                        v-model="LUT_settings['range']"
-                        thumb-label
-                        label="Range"
-                        :max=255
-                        :min=0
-                        hide-details
-                        class="align-center"
-                        color="var(--primary)"
-                        track-color="darkgrey"
-                />
-                <div class="side-by-side-slider">
-                    <v-slider class="ma-0 pa-0"
-                                thumb-label
-                                label="Offset"
-                                v-model="LUT_settings['offset']"
-                                :max=1
-                                :min=-1
-                                :step=0.05
-                                color="var(--primary)"
-                                track-color="darkgrey"
+            <transition name="fade">
+                <div id="lut_controls_analytic" v-show="current_LUT_image === ImageType.ANALYTIC">
+                    <v-range-slider
+                            v-model="LUT_settings_ana['range']"
+                            thumb-label
+                            label="Range"
+                            :max=255
+                            :min=0
+                            hide-details
+                            class="align-center"
+                            color="var(--primary)"
+                            track-color="darkgrey"
                     />
-                    <v-slider class="ma-0 pa-0"
-                              thumb-label
-                              label="Gamma"
-                              v-model="LUT_settings['gamma']"
-                              :max=5
-                              :min=0.1
-                              :step=0.1
-                              color="var(--primary)"
-                              track-color="darkgrey"
-                    />
+                    <div class="side-by-side-slider">
+                        <v-slider class="ma-0 pa-0"
+                                  thumb-label
+                                  label="Offset"
+                                  v-model="LUT_settings_ana['offset']"
+                                  :max=1
+                                  :min=-1
+                                  :step=0.05
+                                  color="var(--primary)"
+                                  track-color="darkgrey"
+                        />
+                        <v-slider class="ma-0 pa-0"
+                                  thumb-label
+                                  label="Gamma"
+                                  v-model="LUT_settings_ana['gamma']"
+                                  :max=5
+                                  :min=0.1
+                                  :step=0.1
+                                  color="var(--primary)"
+                                  track-color="darkgrey"
+                        />
+                    </div>
                 </div>
-            </div>
+            </transition>
+            <transition name="fade">
+                <div id="lut_controls_upload" v-show="current_LUT_image === ImageType.EXPERIMENTAL">
+                    <v-range-slider
+                            v-model="LUT_settings_upl['range']"
+                            thumb-label
+                            label="Range"
+                            :max=255
+                            :min=0
+                            hide-details
+                            class="align-center"
+                            color="var(--primary)"
+                            track-color="darkgrey"
+                    />
+                    <div class="side-by-side-slider">
+                        <v-slider class="ma-0 pa-0"
+                                  thumb-label
+                                  label="Offset"
+                                  v-model="LUT_settings_upl['offset']"
+                                  :max=1
+                                  :min=-1
+                                  :step=0.05
+                                  color="var(--primary)"
+                                  track-color="darkgrey"
+                        />
+                        <v-slider class="ma-0 pa-0"
+                                  thumb-label
+                                  label="Gamma"
+                                  v-model="LUT_settings_upl['gamma']"
+                                  :max=5
+                                  :min=0.1
+                                  :step=0.1
+                                  color="var(--primary)"
+                                  track-color="darkgrey"
+                        />
+                    </div>
+                </div>
+            </transition>
+
+
         </div>
 
         <div class="card card-fft">
@@ -204,6 +270,18 @@
                 </div>
             </div></div>
         </div>
+        <v-snackbar v-model="snackbar">
+            {{ snackText }}
+            <template v-slot:action="{ attrs }">
+                <v-btn
+                        color="pink"
+                        text
+                        v-bind="attrs"
+                        @click="snackbar = false">
+                    Close
+                </v-btn>
+            </template>
+        </v-snackbar>
 
     </div>
 </template>
@@ -211,7 +289,7 @@
 <script>
     import LutManager from "./LutManager";
     import * as d3 from "d3";
-    import { upload_to_rgba } from "../utils/upload_utils";
+    import { upload_to_rgba, ImageType } from "../utils/upload_utils";
 
     export default {
         name: "FourierPanel",
@@ -238,25 +316,36 @@
             },
         },
         data: () => ({
-            analyticFFT: '',
+            analyticFFT: null,
             n_order: 5,
             n_order_list: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25],  // allowed values for n
             m_order: 0,
             m_order_list: [0,1,2,3,4,5,6,7],   // allowed values for +- m
+
             canvas: null,
             overlay: null,
             ctx: null,
+
             rasterSize: 512,
             plot_scale: 0.01,
-            camera: '',
-            scene: '',
-            LUT_settings: { 'range':[0, 255], 'offset':0, 'gamma': 1 },
+            camera: null,
+            scene: null,
+
+            LUT_settings_ana: { 'range':[0, 255], 'offset':0, 'gamma': 1 },
+            LUT_settings_upl: { 'range':[0, 255], 'offset':0, 'gamma': 1 },
+            ImageType: ImageType,
+            current_LUT_image: ImageType.ANALYTIC,  //  image we are applying LUT and contrast settings to (analytic or upload)
+            filterStrings: ['none', 'none'],
             imageData: [],
             imageDataTest: [],
             image: null,
-            wasm: '',
-            wasm_fft_analytic: '',
-            wasm_fft: '',
+            upload_image: null,
+            upload_dim: {'width': 0, 'height': 0},  // we need to keep track of these, as they are not equal to rastersize
+
+            wasm: null,
+            wasm_fft_analytic: null,
+            wasm_fft: null,
+
             coordinates_as_frequency: false,
             coordinates: {'d': 0, 'z': 0, 'r': 0, 'hidden': false},
             uploadRules: [
@@ -269,7 +358,9 @@
                 v => !!v || 'parameter is required',
                 v => v > 0 || 'value must be larger than 0',
             ],
-            lastTransform: null,
+            lastTransform: d3.zoomIdentity,
+            snackbar: false,
+            snackText: ''
         }),
         methods: {
             updateFFT( autoscale ){
@@ -286,7 +377,7 @@
                 this.image.src = this.canvas.toDataURL(); // produces a PNG file
                 console.timeEnd('FFT-analytic-wasm');
                 this.imageDataTest = FFT_image;
-                this.updateContrast();  // make sure to apply existing contrast
+                this.refreshContrast();  // make sure to apply existing contrast
             },
 
             // set the plot scale such that the final layerline (n) is drawn at 70% of the frame height.
@@ -296,12 +387,12 @@
                 if (redraw) { this.updateFFT(); }
             },
 
-            updateContrast() {  // manual application of LUTs. Should be called when new image is loaded.
+            refreshContrast() {  // manual application of LUTs. Should be called when new image is loaded.
                 console.log('refreshing image contrast');
                 this.$nextTick(() => {
                     // This code runs after the DOM has been updated.
                     //  we need to wait for the DOM to be updated (after we set a new image) before we can apply LUTs
-                    this.$refs.LUTs.updateImage()
+                    this.zoomDiffractionPlot(this.lastTransform) // apply luts and zoom etc.
                 });
             },
 
@@ -359,32 +450,43 @@
             process_upload(){
                 console.log('Processing Uploaded image');
                 const reader = new FileReader();
-
                 reader.readAsDataURL(this.imageUpload);
+
+
                 reader.onload = () => {
-                    const rgba = upload_to_rgba(reader.result);
-                    let newImageData;
+                    try {
+                        let raw_upload_image;
+                        [ raw_upload_image, this.upload_dim.width, this.upload_dim.height] = upload_to_rgba(reader.result);
+                        console.log(this.upload_dim.width, 'cha cha', this.upload_dim.height);
+                        let newImageData;
 
-                    // if we have realspace image, we need to take the FFT and show that
-                    // if it is a diffraction pattern, we can just display the image straight away
-                    if (this.upload_needs_fourier) {
-                        console.time('wasm-FFT');
-                        let FFT = this.wasm_fft(rgba);
-                        console.timeEnd('wasm-FFT');
+                        // if we have realspace image, we need to take the FFT and show that
+                        // if it is a diffraction pattern, we can just display the image straight away
+                        if (this.upload_needs_fourier) {
+                            console.time('wasm-FFT');
+                            let FFT = this.wasm_fft(raw_upload_image);
+                            console.timeEnd('wasm-FFT');
 
-                        // convert types
-                        newImageData = new ImageData(Uint8ClampedArray.from(FFT), this.rasterSize, this.rasterSize);
+                            // convert types
+                            newImageData = new ImageData( FFT, this.upload_dim.width, this.upload_dim.height);
+                        }
+                        else {  // we dont need to compute FFT, so we just cast our image to the same type
+                            // convert types
+                            newImageData = raw_upload_image //new ImageData( rgba , 512, 512);
+                        }
+
+                        this.ctx.putImageData( newImageData, 0, 0 );
+                        this.upload_image.src = reader.result;
+                        this.ctx.drawImage(this.upload_image,  0, 0, this.upload_dim.width, this.upload_dim.height,
+                                                               0, 0, this.rasterSize, this.rasterSize);
+                        this.refreshContrast();  // make sure we apply whatever contrast we had previously set
                     }
-                    else {  // we dont need to compute FFT, so we just cast our image to the same type
-                        // convert types
-                        newImageData = new ImageData( Uint8ClampedArray.from(rgba), this.rasterSize, this.rasterSize);
+                    catch (err) {  // some kind of error, but mainly for square. This is not very robust, but it'll do.
+                        this.snackText = "Error: Image aspect ratio isn't square";
+                        this.snackbar = true;
+                        console.log(err)
                     }
-
-                    this.ctx.putImageData( newImageData, 0, 0 );
-                    this.image.src = this.canvas.toDataURL();
-                    this.updateContrast();
                 };
-
             },
 
             updateMouseCoordinate( event ){
@@ -420,7 +522,13 @@
                 this.ctx.translate( -((newWidth-this.rasterSize )/2) + transform.x,
                     -((newHeight-this.rasterSize)/2) + transform.y );
                 this.ctx.scale(scale, scale);
+                // draw analytic image
+                this.ctx.filter = this.filterStrings[0];  // set LUT and contrast
                 this.ctx.drawImage(this.image, 0, 0, this.rasterSize, this.rasterSize);  // draw diffraction image
+                // draw experimental (uploaded) image
+                this.ctx.filter = this.filterStrings[1]; // set LUT and contrast
+                this.ctx.drawImage(this.upload_image,  0, 0, this.upload_dim.width, this.upload_dim.height,
+                                                       0, 0, this.rasterSize, this.rasterSize);
                 this.ctx.restore()
             },
 
@@ -442,24 +550,27 @@
             }
         },
         async mounted() {
+            // intialise Canvas
             this.canvas = document.querySelector( '.rasterImage' );
             this.canvas.width = this.rasterSize;
             this.canvas.height = this.rasterSize;
             this.ctx = this.canvas.getContext( '2d' );
             this.ctx.imageSmoothingEnabled = false;  // ensure we have clear pixelation (no smoothing)
+            this.ctx.globalCompositeOperation = 'lighten';  //additive colour blending
 
-            this.wasm = import("../../wasm/pkg");
 
             this.imageDataTest = new Uint8Array( 4 * this.rasterSize * this.rasterSize );
 
+            // initialise the Image objects
             this.image = new Image();
-            this.image.src = this.canvas.toDataURL(); // produces a PNG file
-            this.ctx.drawImage(this.image, 0, 0, 512, 512);  // draw diffraction image
+            this.upload_image = new Image();
 
+            // load WebAssembly functions
+            this.wasm = import("../../wasm/pkg");
             await this.loadWASMfuncs();
-            this.setDisplayParams();  // set the external display paramters (loaded from URL)
 
-            console.log('[ Fourierpanel mounted ]');
+            // set the external display parameters (loaded from URL)
+            this.setDisplayParams();
 
             // setup the SVG overlay (using D3)
             this.overlay = d3.select(".rasterImageOverlay")
@@ -471,6 +582,9 @@
                     .translateExtent([[-this.rasterSize/2, -this.rasterSize/2], [this.rasterSize/2-1, this.rasterSize/2-1]])
                     .on("zoom", ({transform}) => this.zoomDiffractionPlot(transform)));
             this.overlay.node();  // update the SVG
+            this.$refs.LUTmanager.buildFilterString(); // intialise the fitlers
+
+            console.log('[ Fourierpanel mounted ]');
         }
     }
 </script>
@@ -491,6 +605,7 @@
 
     .card-display{
         padding-bottom: 0;
+        padding-top: 1rem;
     }
 
     .display-controls-header{
@@ -596,12 +711,52 @@
 
     .side-by-side-slider{
         display: flex;
+
+    }
+
+    .current_LUT_image{
+        cursor: pointer;
+        z-index: 1;
+    }
+
+    .fade-enter-active {
+        transition: opacity 1.5s;
+    }
+    .fade-enter /* .fade-leave-active below version 2.1.8 */ {
+        opacity: 0;
+    }
+
+    .highlight{
+        position: relative;
+    }
+
+    .highlight:after {
+        display: inline-block;
+        content: " ";
+        height: 4px;
+        background-color: var(--primary);
+
+        left: 0;
+        position: absolute;
+        top: 86%;
+        margin-left: 5%;
+        width: calc(90%);
+        z-index: -1;
     }
 
     @media only screen and (max-width: 600px) {
         .card-fft{
             height:120vw;
             padding: 0;
+        }
+
+        .display-controls-header{
+            flex-direction: column;
+        }
+
+        .display-controls-drawer{
+            justify-content: space-between;
+            margin-top: 10px;
         }
 
         .order-dropdown{
