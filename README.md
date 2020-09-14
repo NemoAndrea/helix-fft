@@ -1,5 +1,5 @@
 # Helical Fourier Transform
-This repository contains the source code for **helix-fft**, a web-app that will compute and display the diffraction pattern of helices. 
+This repository contains the source code for **helixiser**, a web-app that will compute and display the diffraction pattern of helices. 
 
 This may be useful in educational contexts or to quickly verify whether an observed diffraction pattern is compatible with a certain helical structure.
 
@@ -7,11 +7,17 @@ You can use it here [nemoandrea.github.io/helixiser/](https://nemoandrea.github.
 
 
 
-# Tutorial & Example
+# Tutorial & Examples
 
 You can have a look at the [tutorial](doc/tutorial.md) and  [examples](doc/examples.md).
 
  If you have any interesting structures that you'd like to have added to the list of examples, send me  message on twitter (link on helix-fft page) or email.
+
+## Implementation details
+
+You might be curious how some of the computations are implemented in Helixiser, or perhaps you suspect something is wrong/missing from the algorithms. Below you will find some short doc pages that will get you up to speed with the implementations.
+
+* [FFT in helixiser](doc/fft.md)
 
 # Prior work & References
 
@@ -33,7 +39,7 @@ HelicalDiffractionSimulator - Web Service to Simulate the diffraction patterns o
 
 If you want to make your own modifications, or run the code in this repository that is used to build the deployed version, you will need the following:
 
-* `npm` -  (node package manager), this is required to build the javascript and vue side of the project. 
+* `npm` -  (node package manager), this is required to build the Javascript and Vue side of the project. 
 * `Rustup` - Rust (programming language) installer; this is required for the Rust and WebAssembly part of the project. Allows `cargo` (the rust package manager) to be used systemwide
 
 If you have these two installed on your system, you can run the project locally by navigating to the project directory in terminal and typing:

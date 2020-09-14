@@ -200,6 +200,7 @@ export default {
   :root {
     --primary: salmon;
     --mygrey: #ececec;
+    --secondary: #808080;
   }
 
   ::selection {

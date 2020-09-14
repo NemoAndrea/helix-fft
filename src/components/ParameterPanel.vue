@@ -150,6 +150,18 @@
                     <span>Add another helix</span>
                 </v-tooltip>
                 <div class="button-box">
+                    <v-tooltip bottom>
+                        <template v-slot:activator="{ on }">
+                        <span v-on="on">
+                        <v-checkbox v-model="liveCompute"
+                                    label="live"
+                                    color="var(--primary)"
+                                    class="live-button"
+                        />
+                            </span>
+                        </template>
+                        <span>Automatically compute FFT on parameter change</span>
+                    </v-tooltip>
                 <v-tooltip bottom>
                     <template v-slot:activator="{ on }">
                         <v-btn
@@ -162,17 +174,7 @@
                     </template>
                     <span>Show helix and compute FFT</span>
                 </v-tooltip>
-                <v-tooltip bottom>
-                    <template v-slot:activator="{ on }">
-                        <span v-on="on">
-                        <v-checkbox v-model="liveCompute"
-                                    label="live"
-                                    color="var(--primary)"
-                                     />
-                            </span>
-                    </template>
-                    <span>Automatically compute FFT on parameter change</span>
-                </v-tooltip>
+
                 </div>
             </div>
         </v-form>
@@ -460,6 +462,10 @@
     .optional-params{
         display: flex;
         justify-content: space-between;
+    }
+
+    .live-button{
+        margin-right: 0.5rem;
     }
     .fade-enter-active {
         transition: opacity 0.2s;

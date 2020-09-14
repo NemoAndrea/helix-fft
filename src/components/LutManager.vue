@@ -142,7 +142,7 @@
                 default: 1
             },
             current_image: {
-                type: Number,
+                type: String,
                 default: ImageType.ANALYTIC
             }
         },

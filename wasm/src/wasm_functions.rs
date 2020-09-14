@@ -1,7 +1,7 @@
 use wasm_bindgen::prelude::*;
 use crate::analytic_diffraction::*;
 use crate::display::{ adjust_contrast, arr_to_rgba };
-use crate::fft_2D::FFT_2D;
+use crate::fft_2D::{ FFT_2D, pad_image };
 
 use rustfft::num_complex;
 
@@ -57,13 +57,35 @@ pub fn wasm_diffraction_analytic(helix_family: &JsValue, n_range: u8, m_range: u
     diff_analytic(helices, n_range, m_range, scale, raster_size)
 }
 
-#[wasm_bindgen]  // calculate FFT of image (return the norm of complex-valued fourier transform)
-pub fn wasm_FFT(image: Vec<f64>) -> Vec<f64> {
-    let mut data: Vec<u8> = image.iter().step_by(4).map(|val| *val as u8).collect();
-    let image_data_complex:  Vec<num_complex::Complex64> = data.iter().map(|val| num_complex::Complex64::new(*val as f64, 0f64) ).collect();
-    let img: Array2<num_complex::Complex64> = Array::from_shape_vec((512,512),image_data_complex).unwrap().into();
+// unfortunately I do not know how to return multiple values atm through WASM, so we make a messy array
+#[wasm_bindgen]  // calculate FFT of image (return the norm of complex-valued fourier transform) and dimensions
+pub fn wasm_FFT(image: Vec<f64>, width: u32, height: u32) -> Vec<f64> {
+    //alert(&format!("input image is {} pixels and {} x {}", image.len(), width, height) );
 
-    let mut out_arr: Vec<f64> = FFT_2D(img).iter().map(|val| val.norm().ln()*20f64).collect();
+    // we take the red channel and map it into vector (we assume all channels rgb are equal)
+    let data_mean: f64 = &image.iter().step_by(4).sum::<f64>() / (image.len()as f64 / 4f64 );  // mean pixel value
+    //alert(&format!("Mean pixel value is {}", data_mean) );
+    let data: Vec<num_complex::Complex64> = image.iter().step_by(4).map(
+        |val| num_complex::Complex64::new(*val, 0f64)).collect();
 
-    return arr_to_rgba(out_arr)
+
+    // make vector into 2D array and pad the resulting array with the mean pixel value.
+    let padded_image: Array2<num_complex::Complex64> =
+        pad_image(Array::from_shape_vec((height as usize,width as usize),data)
+                      .unwrap().into(),num_complex::Complex64::new(data_mean, 0f64) );
+
+    let out_width = padded_image.ncols().clone() as f64;
+    let out_height = padded_image.nrows().clone() as f64;
+    //alert(&format!("output is {} x {}", out_width, out_height) );
+
+    // Take FFT and take the log of the norm for display purposes
+    let mut out_arr: Vec<f64> = arr_to_rgba( FFT_2D(padded_image).iter().map(
+        |val| val.norm().ln()*20f64).collect() );  // value of 20 is a bit ad-hoc currently
+    //alert(&out_arr.len().to_string());
+
+    // we add the dimensions of the image to the end of the vector as we cannot have multiple return vals
+    out_arr.push(out_width);
+    out_arr.push(out_height);
+
+    return out_arr
 }

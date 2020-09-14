@@ -5,7 +5,7 @@
                 <div class="card-title">Display Controls <span style="color: #c5c5c5">for</span>&nbsp;
                     <v-tooltip top>
                         <template v-slot:activator="{ on }">
-                                <span class="current_LUT_image highlight" v-on="on"
+                                <span class="current_LUT_image highlight primarycol" v-on="on"
                                       v-show="current_LUT_image === ImageType.ANALYTIC"
                                       @click="current_LUT_image = ImageType.EXPERIMENTAL">
                                     Analytic
@@ -15,7 +15,7 @@
                     </v-tooltip>
                     <v-tooltip top>
                         <template v-slot:activator="{ on }">
-                                <span class="current_LUT_image highlight" v-on="on"
+                                <span class="current_LUT_image highlight secondarycol" v-on="on"
                                       v-show="current_LUT_image === ImageType.EXPERIMENTAL"
                                       @click="current_LUT_image = ImageType.ANALYTIC">
                                     Experimental
@@ -54,9 +54,6 @@
                         </template>
                         <v-list shaped class="upload-window">
                             <v-subheader>UPLOAD EXPERIMENTAL IMAGE</v-subheader>
-                            <v-list-item><v-alert type="error">
-                                Only 512x512 images are currently supported!
-                            </v-alert></v-list-item>
                             <v-list-item ripple>
                                 <div><v-file-input
                                         :rules="uploadRules"
@@ -141,7 +138,7 @@
                 </div>
             </div>
             <transition name="fade">
-                <div id="lut_controls_analytic" v-show="current_LUT_image === ImageType.ANALYTIC">
+                <div class="lut_controls_analytic" v-show="current_LUT_image === ImageType.ANALYTIC">
                     <v-range-slider
                             v-model="LUT_settings_ana['range']"
                             thumb-label
@@ -163,6 +160,7 @@
                                   :step=0.05
                                   color="var(--primary)"
                                   track-color="darkgrey"
+                                  hide-details
                         />
                         <v-slider class="ma-0 pa-0"
                                   thumb-label
@@ -178,7 +176,7 @@
                 </div>
             </transition>
             <transition name="fade">
-                <div id="lut_controls_upload" v-show="current_LUT_image === ImageType.EXPERIMENTAL">
+                <div class="lut_controls_upload" v-show="current_LUT_image === ImageType.EXPERIMENTAL">
                     <v-range-slider
                             v-model="LUT_settings_upl['range']"
                             thumb-label
@@ -187,7 +185,7 @@
                             :min=0
                             hide-details
                             class="align-center"
-                            color="var(--primary)"
+                            color="var(--secondary)"
                             track-color="darkgrey"
                     />
                     <div class="side-by-side-slider">
@@ -198,8 +196,9 @@
                                   :max=1
                                   :min=-1
                                   :step=0.05
-                                  color="var(--primary)"
+                                  color="var(--secondary)"
                                   track-color="darkgrey"
+                                  hide-details
                         />
                         <v-slider class="ma-0 pa-0"
                                   thumb-label
@@ -208,7 +207,7 @@
                                   :max=5
                                   :min=0.1
                                   :step=0.1
-                                  color="var(--primary)"
+                                  color="var(--secondary)"
                                   track-color="darkgrey"
                         />
                     </div>
@@ -229,7 +228,7 @@
                                     <v-icon v-on="on" @click="download_fft()" class="download"> mdi-download </v-icon>
                                 </a>
                             </template>
-                            <span>Download FFT image</span>
+                            <span>Download Image</span>
                         </v-tooltip>
                     </div>
                 </div>
@@ -289,7 +288,7 @@
 <script>
     import LutManager from "./LutManager";
     import * as d3 from "d3";
-    import { upload_to_rgba, ImageType } from "../utils/upload_utils";
+    import { upload_to_rgba, ImageData_to_dataURL , ImageType } from "../utils/upload_utils";
 
     export default {
         name: "FourierPanel",
@@ -457,32 +456,33 @@
                     try {
                         let raw_upload_image;
                         [ raw_upload_image, this.upload_dim.width, this.upload_dim.height] = upload_to_rgba(reader.result);
-                        console.log(this.upload_dim.width, 'cha cha', this.upload_dim.height);
                         let newImageData;
 
                         // if we have realspace image, we need to take the FFT and show that
                         // if it is a diffraction pattern, we can just display the image straight away
                         if (this.upload_needs_fourier) {
                             console.time('wasm-FFT');
-                            let FFT = this.wasm_fft(raw_upload_image);
+                            let FFT = this.wasm_fft(raw_upload_image.data, this.upload_dim.width, this.upload_dim.height);
                             console.timeEnd('wasm-FFT');
-
+                            // unfortunately this is way we have to handle things for now
+                            // until multi-value return becomes clearer for WASM.
+                            this.upload_dim.width = FFT[FFT.length-2];
+                            this.upload_dim.height = FFT[FFT.length-1];
                             // convert types
-                            newImageData = new ImageData( FFT, this.upload_dim.width, this.upload_dim.height);
+                            newImageData = new ImageData( Uint8ClampedArray.from(FFT.slice(0,-2)),
+                                this.upload_dim.width, this.upload_dim.height);
                         }
                         else {  // we dont need to compute FFT, so we just cast our image to the same type
                             // convert types
                             newImageData = raw_upload_image //new ImageData( rgba , 512, 512);
                         }
 
-                        this.ctx.putImageData( newImageData, 0, 0 );
-                        this.upload_image.src = reader.result;
-                        this.ctx.drawImage(this.upload_image,  0, 0, this.upload_dim.width, this.upload_dim.height,
-                                                               0, 0, this.rasterSize, this.rasterSize);
+                        this.upload_image.src = ImageData_to_dataURL(newImageData);
+                        console.log('upload scale is: ', this.uploadScale);
                         this.refreshContrast();  // make sure we apply whatever contrast we had previously set
                     }
-                    catch (err) {  // some kind of error, but mainly for square. This is not very robust, but it'll do.
-                        this.snackText = "Error: Image aspect ratio isn't square";
+                    catch (err) {  // some kind of error, but mainly for square. TODO: proper error handling
+                        this.snackText = "Oops, something went wrong with uploaded image";
                         this.snackbar = true;
                         console.log(err)
                     }
@@ -527,9 +527,18 @@
                 this.ctx.drawImage(this.image, 0, 0, this.rasterSize, this.rasterSize);  // draw diffraction image
                 // draw experimental (uploaded) image
                 this.ctx.filter = this.filterStrings[1]; // set LUT and contrast
-                this.ctx.drawImage(this.upload_image,  0, 0, this.upload_dim.width, this.upload_dim.height,
-                                                       0, 0, this.rasterSize, this.rasterSize);
+                this.drawUpload();
                 this.ctx.restore()
+            },
+
+            drawUpload() {
+                // we draw the uploaded image (diffraction plot) and we scale it appropriately
+                // the overall scale incorporates pixel size and the plot scale for the analytic plot
+                const scale_fac = 1/this.uploadScale*1/this.plot_scale*0.002;
+                this.ctx.drawImage(this.upload_image,
+                0, 0, this.upload_dim.width, this.upload_dim.height,
+                this.rasterSize*(1-scale_fac)/2, this.rasterSize*(1-scale_fac)/2,
+                this.rasterSize*scale_fac, this.rasterSize*scale_fac);
             },
 
             show_preview(){
@@ -695,7 +704,8 @@
     }
 
     .upload-preview{
-        width: 100%;
+        max-width: 100%;
+        max-height: 40vh;
         display: block;
     }
 
@@ -734,14 +744,25 @@
         display: inline-block;
         content: " ";
         height: 4px;
-        background-color: var(--primary);
-
         left: 0;
         position: absolute;
-        top: 86%;
+        top: 93%;
         margin-left: 5%;
         width: calc(90%);
         z-index: -1;
+    }
+
+    .primarycol:after{
+        background-color: var(--primary);
+    }
+
+    .secondarycol:after{
+        background-color: var(--secondary);
+    }
+
+    .lut_controls_analytic, .lut_controls_upload{
+        position: relative;
+        z-index: 1;
     }
 
     @media only screen and (max-width: 600px) {
@@ -776,6 +797,10 @@
 
         .upload-window{
             width: auto;
+        }
+
+        .side-by-side-slider{
+            flex-direction: column;
         }
     }
 </style>
