@@ -38,6 +38,7 @@ pub fn J1(x: f64) -> f64 {
   return sign * J1b(x)
 }
 
+
 pub fn J0a(x: f64) -> f64 {
   1. - x.pow(2) / 4. + x.pow(4) / 64. - x.pow(6) / (2304.) + x.pow(8) / 147456. -
       x.pow(10) / 14745600. + x.pow(12) / 2123366400. - x.pow(14) / 416179814400.
@@ -62,6 +63,7 @@ pub fn J1b(x: f64) -> f64 {
   (2. / (PI * x)).sqrt() * (1. + 3. * (4. * x).pow(-2) - 99. / (512. * x.pow(4))) * trigarg.cos()
 }
 
+
 // computes the next bessel "Jn(x)" using the values of Jn_minus_one(x) and Jn_minus_two(x) (at same x)
 // this makes use of the recurrence relation Jn(x) = 2*(n-1) / x * Jn_minus_one(x) - Jn_minus_two(x)
 // as described in:
@@ -84,6 +86,7 @@ pub fn nextBessel(n: u64, x: f64, Jn_minus_one: f64, Jn_minus_two: f64) -> f64 {
   // for n=2 and up, we can use our recurrence relation
   return sign * (2. * ((n - 1) as f64) / z * Jn_minus_one) - Jn_minus_two
 }
+
 
 pub fn Jn(n: u64, x: f64) -> f64 {
   let mut sign = 1.;
@@ -134,4 +137,41 @@ pub fn Jn(n: u64, x: f64) -> f64 {
     ans = J0(z) / pkm1;
   }
   return sign * ans;
+}
+
+pub fn bessel_first_max(n: u32) -> f64 {
+  let bessel_max_array: Vec<f64> = vec![
+    0.0,  // n=0
+    1.8411845631396737,
+    3.054237453259305,
+    4.201189419366311,
+    5.31755394435717,
+    6.4156173973175346, // n=5
+    7.50126727562796,
+    8.577837671919578,
+    9.647422850370246,
+    10.711435164143216,
+    11.770877850893616, // n=10
+    12.82649237913127,
+    13.878844191880322,
+    14.928375584199912,
+    15.975439867036497,
+    17.020324300768433, // n=15
+    18.06326599063402,
+    19.104463207431817,
+    20.144083640890184,
+    21.182270540354093,
+    22.219147365931807, //n=20
+    23.25482136749967,
+    24.289386377801353,
+    25.322925019895663,
+    26.355510471827266,
+    27.387207891944033, //n=25
+  ];
+  if n > (bessel_max_array.len()-1) as u32 {
+    // ideally you might add a function that uses some minimiser and Jn(x) to find a minimum.
+    panic!("Cannot find bessel maximum for this order") // throw an error
+  } else {
+    bessel_max_array[n as usize]
+  }
 }

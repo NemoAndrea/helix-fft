@@ -2,6 +2,7 @@ use wasm_bindgen::prelude::*;
 use crate::analytic_diffraction::*;
 use crate::display::{ adjust_contrast, arr_to_rgba };
 use crate::fft_2D::{ FFT_2D, pad_image };
+use crate::bessel_utils::bessel_first_max;
 
 use rustfft::num_complex;
 
@@ -88,4 +89,9 @@ pub fn wasm_FFT(image: Vec<f64>, width: u32, height: u32) -> Vec<f64> {
     out_arr.push(out_height);
 
     return out_arr
+}
+
+#[wasm_bindgen]  // get x value of the first maximum of Jn(x) for given n.
+pub fn wasm_bessel_first_max(n: u32) -> f64 {
+    bessel_first_max(n)
 }

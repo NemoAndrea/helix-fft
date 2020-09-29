@@ -27,13 +27,15 @@ pub struct Helix {
 
 
 impl Helix {
-    fn pitch(&self) -> f64 {
+    pub fn pitch(&self) -> f64 {
         self.rise * self.frequency
     }
 
-    fn rotation_to_rad(&self) -> f64 {
+    pub fn rotation_to_rad(&self) -> f64 {
         self.rotation * PI / 180.
     }
+
+    pub fn rad_per_subunit(&self) -> f64 { 2f64 * PI / self.frequency }
 }
 
 // returns a 1D array, with values in order (R,G,B,A) and then next pixel etc.

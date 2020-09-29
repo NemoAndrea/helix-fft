@@ -2,27 +2,31 @@
     <div class="ui-fft-panel-sub">
         <div class="card card-display">
             <div class="display-controls-header">
-                <div class="card-title">Display Controls <span style="color: #c5c5c5">for</span>&nbsp;
-                    <v-tooltip top>
-                        <template v-slot:activator="{ on }">
-                                <span class="current_LUT_image highlight primarycol" v-on="on"
-                                      v-show="current_LUT_image === ImageType.ANALYTIC"
-                                      @click="current_LUT_image = ImageType.EXPERIMENTAL">
-                                    Analytic
-                                </span>
-                        </template>
-                        <span>Switch to experimental image controls</span>
-                    </v-tooltip>
-                    <v-tooltip top>
-                        <template v-slot:activator="{ on }">
-                                <span class="current_LUT_image highlight secondarycol" v-on="on"
-                                      v-show="current_LUT_image === ImageType.EXPERIMENTAL"
-                                      @click="current_LUT_image = ImageType.ANALYTIC">
-                                    Experimental
-                                </span>
-                        </template>
-                        <span>Switch to analytic image controls</span>
-                    </v-tooltip>
+                <div class="card-title">Adjusting
+                    <span v-show="current_LUT_image === ImageType.ANALYTIC">
+                        <v-tooltip top>
+                            <template v-slot:activator="{ on }">
+                                    <span class="current_LUT_image highlight primarycol" v-on="on"
+
+                                          @click="current_LUT_image = ImageType.EXPERIMENTAL">
+                                        Analytic image
+                                    </span>
+                            </template>
+                            <span>Switch to experimental image controls</span>
+                        </v-tooltip>
+                    </span>
+                    <span v-show="current_LUT_image === ImageType.EXPERIMENTAL">
+                        <v-tooltip top>
+                            <template v-slot:activator="{ on }">
+                                    <span class="current_LUT_image highlight secondarycol" v-on="on"
+
+                                          @click="current_LUT_image = ImageType.ANALYTIC">
+                                        Experimental image
+                                    </span>
+                            </template>
+                            <span>Switch to analytic image controls</span>
+                        </v-tooltip>
+                    </span>
                 </div>
                 <div class="display-controls-drawer">
                     <!--LUT manager -->
@@ -38,59 +42,6 @@
                                 v-on:new_filter_string="filterStrings = arguments[0]"
                                 v-on:lut_update="zoomDiffractionPlot(lastTransform)"
                                 ref="LUTmanager"/>
-                    <!-- USER IMAGE UPLOAD-->
-                    <v-menu left bottom  transition="slide-y-transition" :offset-y=true
-                            :close-on-content-click=false>
-                        <template v-slot:activator="{ on: menu, attrs }">
-                            <v-tooltip bottom >
-                                <template v-slot:activator="{ on: tooltip }">
-                                    <v-btn v-bind="attrs" icon v-on="{ ...tooltip, ...menu }"
-                                           class="display-controls-button">
-                                        <v-icon > mdi-microscope </v-icon>
-                                    </v-btn>
-                                </template>
-                                <span> Upload experimental helix image </span>
-                            </v-tooltip>
-                        </template>
-                        <v-list shaped class="upload-window">
-                            <v-subheader>UPLOAD EXPERIMENTAL IMAGE</v-subheader>
-                            <v-list-item ripple>
-                                <div><v-file-input
-                                        :rules="uploadRules"
-                                        filled
-                                        accept="image/png, image/jpeg, image/bmp"
-                                        placeholder="Upload a local image"
-                                        prepend-icon="mdi-camera"
-                                        v-model="imageUpload"
-                                        color="var(--primary)"
-                                        @change="show_preview"
-                                ></v-file-input>
-                                    <img class="upload-preview">
-                                </div>
-                            </v-list-item>
-                            <span v-if="imageUpload!==null">
-                            <v-list-item ripple> <div>
-                                <div class="upload-menu-header">What kind of image is it?</div>
-                                <v-radio-group dense v-model="upload_needs_fourier" class="compact-radio">
-                                    <v-radio label="Realspace" :value=true color="var(--primary)"></v-radio>
-                                    <v-radio label="Diffraction Pattern" :value=false color="var(--primary)"></v-radio>
-                                </v-radio-group></div>
-                             </v-list-item> </span>
-                            <span v-if="upload_needs_fourier!==null"><v-list-item ripple>
-                                    <div><div class="upload-menu-header">Specify pixel size</div>
-                                <v-text-field label="Pixel size"
-                                              :rules="numberRules"
-                                              suffix="nm"
-                                              color="var(--primary)"
-                                              type="number" v-model="uploadScale"></v-text-field></div>
-                            </v-list-item></span>
-                            <span v-if="uploadScale > 0"><v-list-item ripple>
-                                <v-btn v-show="upload_needs_fourier===true" color="var(--primary)" @click="process_upload()">compute FFT and show</v-btn>
-                                <v-btn v-show="upload_needs_fourier===false" color="var(--primary)" @click="process_upload()">show</v-btn>
-                            </v-list-item></span>
-
-                        </v-list>
-                    </v-menu>
                     <!-- DISTANCE MEASUREMENT SETTINGS-->
                     <v-menu left bottom :close-on-click=true transition="slide-y-transition" :offset-y=true >
                         <template v-slot:activator="{ on: menu, attrs }">
@@ -121,12 +72,19 @@
                         </v-list>
                     </v-menu>
 
-                    <!--                <v-tooltip bottom >-->
-                    <!--                    <template v-slot:activator="{ on }">-->
-                    <!--                        <v-icon v-on="on" class="display-controls-button"> mdi-currency-eth OR mdi-altimeter </v-icon>-->
-                    <!--                    </template>-->
-                    <!--                    <span> Toggle overlay first zeros of analytic solution</span>-->
-                    <!--                </v-tooltip>-->
+                    <v-tooltip bottom >
+                        <template v-slot:activator="{ on }">
+                            <v-btn
+                                    icon
+                                    @click="toggle_maxima_overlay"
+                                    v-on="on"
+                                    class="display-controls-button"
+                            >
+                                <v-icon > mdi-altimeter </v-icon>
+                            </v-btn>
+                        </template>
+                        <span> Toggle overlay of bessel functions first maxima </span>
+                    </v-tooltip>
                     <!-- SET PLOT SCALE -->
                     <v-tooltip bottom >
                         <template v-slot:activator="{ on }">
@@ -135,10 +93,69 @@
                         </template>
                         <span>resize diffraction plot to fit current n</span>
                     </v-tooltip>
+                    <!-- USER IMAGE UPLOAD-->
+                    <v-dialog v-model="show_upload_dialog" persistent max-width="44rem">
+                        <template v-slot:activator="{ on: menu, attrs }">
+                            <v-tooltip bottom >
+                                <template v-slot:activator="{ on: tooltip }">
+                                    <v-btn v-bind="attrs" v-on="{ ...tooltip, ...menu }" icon
+                                           class="display-controls-button">
+                                        <v-icon> mdi-microscope </v-icon>
+                                    </v-btn>
+                                </template>
+                                <span> Upload experimental helix image </span>
+                            </v-tooltip>
+                        </template>
+                        <div shaped class="upload-window">
+                            <div class="upload-menu-title">
+                                <v-subheader>UPLOAD EXPERIMENTAL IMAGE</v-subheader>
+                                <v-btn icon color="var(--primary)" @click="show_upload_dialog=false"
+                                       class="upload-close-mobile"><v-icon>mdi-close-circle-outline</v-icon></v-btn>
+                            </div>
+                            <img class="upload-preview" >
+                            <div class="upload-input"><v-file-input
+                                    :rules="uploadRules"
+                                    filled
+                                    accept="image/png, image/jpeg, image/bmp"
+                                    placeholder="Upload a local image"
+                                    prepend-icon="mdi-camera"
+                                    v-model="imageUpload"
+                                    color="var(--primary)"
+                                    @change="show_preview"
+                            ></v-file-input>
+
+                                <span v-if="imageUpload!==null">
+
+                                <div class="upload-menu-header">What kind of image is it?</div>
+                                <v-radio-group dense v-model="upload_needs_fourier" class="compact-radio">
+                                    <v-radio label="Realspace" :value=true color="var(--primary)"></v-radio>
+                                    <v-radio label="Diffraction Pattern" :value=false color="var(--primary)"></v-radio>
+                                </v-radio-group>
+                                </span>
+                                <span v-if="upload_needs_fourier!==null">
+                                    <div><div class="upload-menu-header">Specify pixel size</div>
+                                <v-text-field label="Pixel size"
+                                              :rules="numberRules"
+                                              suffix="nm"
+                                              color="var(--primary)"
+                                              type="number" v-model="uploadScale"
+                                              autofocus></v-text-field></div>
+                                </span>
+                                <span v-if="uploadScale > 0">
+                                <v-btn v-show="upload_needs_fourier===true" color="var(--primary)" @click="process_upload()">compute FFT and show</v-btn>
+                                <v-btn v-show="upload_needs_fourier===false" color="var(--primary)" @click="process_upload()">show</v-btn>
+                                </span>
+
+                            </div>
+                            <v-btn color="var(--primary)"
+                                   @click="show_upload_dialog=false" outlined class="upload-close">close</v-btn>
+                        </div>
+                    </v-dialog>
                 </div>
             </div>
             <transition name="fade">
                 <div class="lut_controls_analytic" v-show="current_LUT_image === ImageType.ANALYTIC">
+                    <div class="side-by-side">
                     <v-range-slider
                             v-model="LUT_settings_ana['range']"
                             thumb-label
@@ -150,6 +167,15 @@
                             color="var(--primary)"
                             track-color="darkgrey"
                     />
+                    <v-tooltip bottom><template v-slot:activator="{ on }"> <v-btn v-show="visible['analytic']" icon color="var(--primary)" @click="visible['analytic']=false"  class="hide-button" v-on="on">
+                        <v-icon>mdi-eye</v-icon>
+                    </v-btn></template>
+                        <span>Hide analytic image</span></v-tooltip>
+                    <v-tooltip bottom><template v-slot:activator="{ on }"> <v-btn v-show="!visible['analytic']" icon color="var(--primary)" @click="visible['analytic']=true"  class="hide-button" v-on="on">
+                        <v-icon>mdi-eye-off</v-icon>
+                    </v-btn></template>
+                        <span>Show analytic image</span></v-tooltip>
+                    </div>
                     <div class="side-by-side-slider">
                         <v-slider class="ma-0 pa-0"
                                   thumb-label
@@ -177,6 +203,7 @@
             </transition>
             <transition name="fade">
                 <div class="lut_controls_upload" v-show="current_LUT_image === ImageType.EXPERIMENTAL">
+                    <div class="side-by-side">
                     <v-range-slider
                             v-model="LUT_settings_upl['range']"
                             thumb-label
@@ -188,6 +215,15 @@
                             color="var(--secondary)"
                             track-color="darkgrey"
                     />
+                    <v-tooltip bottom><template v-slot:activator="{ on }"> <v-btn v-show="visible['upload']" icon color="var(--secondary)" @click="visible['upload']=false"  v-on="on" class="hide-button">
+                        <v-icon>mdi-eye</v-icon>
+                    </v-btn></template>
+                        <span>Hide experimental image</span></v-tooltip>
+                    <v-tooltip bottom><template v-slot:activator="{ on }"> <v-btn v-show="!visible['upload']" icon color="var(--secondary)" @click="visible['upload']=true"  v-on="on" class="hide-button">
+                        <v-icon>mdi-eye-off</v-icon>
+                    </v-btn></template>
+                        <span>Show experimental image</span></v-tooltip>
+                    </div>
                     <div class="side-by-side-slider">
                         <v-slider class="ma-0 pa-0"
                                   thumb-label
@@ -220,7 +256,7 @@
         <div class="card card-fft">
             <div class="fft-card-header">
                 <div class="fft-card-header-left">
-                    <div class="card-title">Diffraction pattern (analytic)</div>
+                    <div class="card-title">Diffraction pattern</div>
                     <div v-if="updateCounter>0"> <!--check we have an image. Not perfect but fine for most cases.-->
                         <v-tooltip bottom>
                             <template v-slot:activator="{ on }">
@@ -242,8 +278,8 @@
                                 outlined
                                 dense
                                 hide-details
-                                @change="updateFFT( false )"
-                        />
+
+                        /> <!--@change="updateFFT( false )"-->
                     </div>
                     <div class="order-dropdown">
                         <v-select
@@ -254,12 +290,12 @@
                                 outlined
                                 dense
                                 hide-details
-                                @change="updateFFT( false )"
                         />
                     </div>
                 </div>
             </div>
-            <div style="margin: 0.5rem"><div class="image-container">
+
+            <div style="margin: 0.5rem"><v-responsive :aspect-ratio="1" class="image-container">
                 <canvas class="rasterImage"></canvas>
                 <!--style="background-color: red; opacity: 30%"-->
                 <svg class="rasterImageOverlay"  ></svg>
@@ -267,7 +303,8 @@
                     <div v-if="coordinates_as_frequency"> f: {{coordinates['d'].toFixed(2)}} 1/nm (z: {{coordinates['z'].toFixed(2)}} 1/nm, r: {{coordinates['r'].toFixed(2)}} 1/nm) </div>
                     <div v-if="!coordinates_as_frequency"> 1/f: {{coordinates['d'].toFixed(2)}} nm (z: {{coordinates['z'].toFixed(2)}} nm, r: {{coordinates['r'].toFixed(2)}} nm)</div>
                 </div>
-            </div></div>
+            </v-responsive></div>
+
         </div>
         <v-snackbar v-model="snackbar">
             {{ snackText }}
@@ -289,6 +326,7 @@
     import LutManager from "./LutManager";
     import * as d3 from "d3";
     import { upload_to_rgba, ImageData_to_dataURL , ImageType } from "../utils/upload_utils";
+    import { draw_overlay } from "../utils/overlay_utils";
 
     export default {
         name: "FourierPanel",
@@ -313,6 +351,16 @@
             updateCounter: {
                 handler: function () { this.updateFFT( false) }
             },
+            visible: {  // make sure we also re-draw the image after toggling visibility.
+                deep: true,
+                handler: function () { this.zoomDiffractionPlot( this.lastTransform) }
+            },
+            n_order: {
+                handler: function () { this.updateFFT( false ) }
+            },
+            m_order: {
+                handler: function () { this.updateFFT( false ) }
+            }
         },
         data: () => ({
             analyticFFT: null,
@@ -326,6 +374,7 @@
             ctx: null,
 
             rasterSize: 512,
+            displayFac: 1,
             plot_scale: 0.01,
             camera: null,
             scene: null,
@@ -333,17 +382,20 @@
             LUT_settings_ana: { 'range':[0, 255], 'offset':0, 'gamma': 1 },
             LUT_settings_upl: { 'range':[0, 255], 'offset':0, 'gamma': 1 },
             ImageType: ImageType,
-            current_LUT_image: ImageType.ANALYTIC,  //  image we are applying LUT and contrast settings to (analytic or upload)
+            current_LUT_image: ImageType.ANALYTIC,  //  image we are applying LUT and contrast settings to (aa22222222222222222222222222222nalytic or upload)
             filterStrings: ['none', 'none'],
             imageData: [],
             imageDataTest: [],
             image: null,
             upload_image: null,
             upload_dim: {'width': 0, 'height': 0},  // we need to keep track of these, as they are not equal to rastersize
+            visible: {'analytic': true, 'upload': true},  // whether to show or hide images (upload = experimental)
+            show_maxima_overlay: false,
 
             wasm: null,
             wasm_fft_analytic: null,
             wasm_fft: null,
+            wasm_bessel_max: null,
 
             coordinates_as_frequency: false,
             coordinates: {'d': 0, 'z': 0, 'r': 0, 'hidden': false},
@@ -352,6 +404,7 @@
             ],
             imageUpload: null,
             upload_needs_fourier: null,
+            show_upload_dialog: false,
             uploadScale: 0,
             numberRules: [
                 v => !!v || 'parameter is required',
@@ -392,6 +445,12 @@
                     // This code runs after the DOM has been updated.
                     //  we need to wait for the DOM to be updated (after we set a new image) before we can apply LUTs
                     this.zoomDiffractionPlot(this.lastTransform) // apply luts and zoom etc.
+
+                    // if we have overlay on, we need to refresh it too
+                    if (this.show_maxima_overlay)  { // overlay was being shown
+                        this.toggle_maxima_overlay(); // turn off
+                        this.toggle_maxima_overlay(); // turn on and redraw
+                    }
                 });
             },
 
@@ -428,12 +487,12 @@
             setDisplayParams (){
                 for (const [key, value] of Object.entries( this.externalDisplayParams ) ) {
                     if (key === 'n') {
-                        if ( this.n_order_list.includes(Number(value)) ){  // make sure we are considering a valid value
-                            this.n_order = Number(value);
+                        if ( this.n_order_list.includes(+value) ){  // make sure we are considering a valid value
+                            this.n_order = +value;
                         }
                     } else if (key == 'm'){
-                        if ( this.m_order_list.includes(Number(value)) ){  // make sure we are considering a valid value
-                            this.m_order = Number(value);
+                        if ( this.m_order_list.includes(+value) ){  // make sure we are considering a valid value
+                            this.m_order = +value;
                         }
                     } else if (key == 's'){
                         if (value > 0) {  // only positive values for the scale
@@ -480,6 +539,7 @@
                         this.upload_image.src = ImageData_to_dataURL(newImageData);
                         console.log('upload scale is: ', this.uploadScale);
                         this.refreshContrast();  // make sure we apply whatever contrast we had previously set
+                        this.show_upload_dialog = false; // close upload dialog
                     }
                     catch (err) {  // some kind of error, but mainly for square. TODO: proper error handling
                         this.snackText = "Oops, something went wrong with uploaded image";
@@ -489,11 +549,12 @@
                 };
             },
 
+            // calculate the spatial frequency that the cursor is placed at. (toggled under button 'measurement settings')
             updateMouseCoordinate( event ){
                 const pointer = d3.pointer(event);
-                const x = ( Math.round(pointer[0]) ) * this.plot_scale;
-                const y = ( Math.round(pointer[1]) ) * this.plot_scale;
-
+                // we get the physical coordinates. We draw this on the SVG, so we must correct with this.displayFac
+                const x = ( Math.round(pointer[0]) - 0.5 ) * this.plot_scale * this.displayFac ;
+                const y = ( Math.round(pointer[1]) - 0.5 ) * this.plot_scale * this.displayFac;
 
                 if ( this.coordinates_as_frequency ) {  // display as values with units 1/distance (Frequency)
                     this.coordinates['d'] = Math.round( Math.sqrt(x**2 + y**2) * 100)/100;
@@ -519,15 +580,19 @@
                 const newHeight = this.rasterSize*scale;
                 this.ctx.save();
                 this.ctx.clearRect(0, 0, this.rasterSize, this.rasterSize);
-                this.ctx.translate( -((newWidth-this.rasterSize )/2) + transform.x,
-                    -((newHeight-this.rasterSize)/2) + transform.y );
+                this.ctx.translate( -((newWidth-this.rasterSize )/2) + transform.x*this.displayFac,
+                    -((newHeight-this.rasterSize)/2) + transform.y*this.displayFac );
                 this.ctx.scale(scale, scale);
                 // draw analytic image
-                this.ctx.filter = this.filterStrings[0];  // set LUT and contrast
-                this.ctx.drawImage(this.image, 0, 0, this.rasterSize, this.rasterSize);  // draw diffraction image
+                if (this.visible['analytic']) {
+                    this.ctx.filter = this.filterStrings[0];  // set LUT and contrast
+                    this.ctx.drawImage(this.image, 0, 0, this.rasterSize, this.rasterSize);  // draw diffraction image
+                }
                 // draw experimental (uploaded) image
-                this.ctx.filter = this.filterStrings[1]; // set LUT and contrast
-                this.drawUpload();
+                if (this.visible['upload']) {
+                    this.ctx.filter = this.filterStrings[1  ]; // set LUT and contrast
+                    this.drawUpload();
+                }
                 this.ctx.restore()
             },
 
@@ -539,6 +604,21 @@
                 0, 0, this.upload_dim.width, this.upload_dim.height,
                 this.rasterSize*(1-scale_fac)/2, this.rasterSize*(1-scale_fac)/2,
                 this.rasterSize*scale_fac, this.rasterSize*scale_fac);
+            },
+
+
+            // function that overlays, for each bessel function, the location of the first maxima on the image.
+            // this plot wll currently only take  information from the first helix in the helixfamily.
+            toggle_maxima_overlay() {
+                console.log(`Toggling maxima overlay (SVG) to ${!this.show_maxima_overlay}`);
+                if (this.show_maxima_overlay){
+                    this.show_maxima_overlay = false; // hide
+                    document.querySelectorAll('.maxima').forEach(e => e.remove());
+                } else {
+                    this.show_maxima_overlay = true; // set internal state to shown
+                    draw_overlay(this.overlay, this.wasm_bessel_max, this.helixFamily[0],
+                        this.m_order, this.n_order_list, this.plot_scale * this.displayFac)
+                }
             },
 
             show_preview(){
@@ -556,6 +636,7 @@
             async loadWASMfuncs (){
                 this.wasm_fft_analytic = (await this.wasm).wasm_diffraction_analytic;
                 this.wasm_fft = (await this.wasm).wasm_FFT;
+                this.wasm_bessel_max = (await this.wasm).wasm_bessel_first_max;
             }
         },
         async mounted() {
@@ -582,13 +663,18 @@
             this.setDisplayParams();
 
             // setup the SVG overlay (using D3)
+            // eslint-disable-next-line no-unused-vars
+            let imgDisplayWidth = document.querySelector('.image-container').clientWidth;
+            let imgDisplayHeight = document.querySelector('.image-container').clientHeight;
+
+            this.displayFac = this.rasterSize / imgDisplayWidth;
             this.overlay = d3.select(".rasterImageOverlay")
-                .attr("viewBox", [-this.rasterSize/2, -this.rasterSize/2, this.rasterSize, this.rasterSize])
+                .attr("viewBox", [-imgDisplayWidth/2, -imgDisplayHeight/2, imgDisplayWidth, imgDisplayHeight])
                 .on("mousemove", (event) => { this.updateMouseCoordinate(event) })
                 .call(d3.zoom()
-                    .extent([[-this.rasterSize/2,-this.rasterSize/2],[this.rasterSize/2-1, this.rasterSize/2-1]])
+                    .extent([[-imgDisplayWidth/2, -imgDisplayHeight/2], [imgDisplayWidth/2, imgDisplayHeight/2]])
                     .scaleExtent([1, 5])
-                    .translateExtent([[-this.rasterSize/2, -this.rasterSize/2], [this.rasterSize/2-1, this.rasterSize/2-1]])
+                    .translateExtent([[-imgDisplayWidth/2, -imgDisplayHeight/2], [imgDisplayWidth/2, imgDisplayHeight/2]])
                     .on("zoom", ({transform}) => this.zoomDiffractionPlot(transform)));
             this.overlay.node();  // update the SVG
             this.$refs.LUTmanager.buildFilterString(); // intialise the fitlers
@@ -597,6 +683,23 @@
         }
     }
 </script>
+
+<style> /* unscoped styles*/
+    /* for the SVG overlay (maxima)*/
+    div.maxima-tooltip {
+        position: absolute;
+        text-align: center;
+        padding: .2rem;
+        background: #313639;
+        color: #f9f9f9;
+        border: 0px;
+        border-radius: 8px;
+        pointer-events: none;
+        font-size: .7rem;
+        z-index: 3;
+        font-family: monospace;
+    }
+</style>
 
 <style scoped>
 
@@ -637,8 +740,7 @@
     .rasterImage{
         max-width: 100%;
         max-height: 100%;
-
-        width: inherit;;
+        width: 100%;
         position: absolute;
     }
 
@@ -649,6 +751,7 @@
         position: relative;
         width: inherit;
         cursor: crosshair;
+        display: block;  /*THIS IS IMPORTANT!*/
     }
 
     .coordinates-overlay{
@@ -700,13 +803,43 @@
     }
 
     .upload-window{
-        width: 22rem;
+        width: 44rem;
+        background-color: white;
+        padding: 0.4rem 1rem 1rem 1rem;
+
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        grid-template-columns: 1fr auto;
+    }
+
+    .upload-input{
+        align-self: start;
+        grid-row: 2;
+        grid-column: 1;
     }
 
     .upload-preview{
         max-width: 100%;
         max-height: 40vh;
-        display: block;
+        display: inline-block;
+        padding-left: 1rem;
+        grid-row: 2;
+        grid-column: 2;
+    }
+
+    .upload-close{
+        grid-row: 3;
+        grid-column: 1 / span 2;
+        justify-self: end;
+        margin-top: 0.7rem;
+    }
+
+    .upload-menu-title{
+        grid-row: 1;
+        grid-column: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 
     .upload-menu-header{
@@ -715,13 +848,24 @@
         margin-top: 0.2rem;
     }
 
+    .upload-close-mobile{ /*hide this button on desktop*/
+        display: none;
+    }
+
     .compact-radio{
         margin: 0.1rem;
     }
 
+    .side-by-side{
+        display: flex;
+    }
+
+    .hide-button{
+        margin-left: 0.5rem;
+    }
+
     .side-by-side-slider{
         display: flex;
-
     }
 
     .current_LUT_image{
@@ -797,10 +941,35 @@
 
         .upload-window{
             width: auto;
+            grid-template-rows: auto auto 1fr;
+            grid-template-columns: 1fr;
         }
 
         .side-by-side-slider{
             flex-direction: column;
         }
+
+        .upload-preview{
+            grid-row: 2;
+            grid-column: 1;
+            margin-bottom: 1rem;
+            padding: 0;
+            justify-self: center;
+        }
+
+        .upload-input{
+            grid-row: 3;
+            grid-column: 1;
+        }
+
+        .upload-close{ /*hide this button on mobile*/
+            display: none;
+        }
+
+        .upload-close-mobile{ /*show this button on mobile*/
+            display: block;
+        }
+
+        .hide-button{ margin-left: 0 }
     }
 </style>

@@ -14,11 +14,23 @@
         <v-list shaped>
             <v-subheader>CHOOSE LUT</v-subheader>
             <v-list-item>
-                <v-radio-group v-if="current_image===ImageType.ANALYTIC"  v-model="LUT_analytic">
-                        <v-radio color="var(--primary)" v-for="lut in LUT_list" :key="lut" :label="lut" :value="lut" />
+                <v-radio-group v-if="current_image===ImageType.ANALYTIC"  style="margin-top: 0" v-model="LUT_analytic">
+                        <v-switch
+                                v-model="invert_LUT_ana"
+                                label="invert LUT"
+                                :color="current_image"
+                                style="margin-top: 0"
+                        ></v-switch>
+                        <v-radio :color="current_image" v-for="lut in LUT_list" :key="lut" :label="lut" :value="lut" />
                 </v-radio-group>
-                <v-radio-group v-if="current_image===ImageType.EXPERIMENTAL"  v-model="LUT_upload">
-                        <v-radio color="var(--primary)" v-for="lut in LUT_list" :key="lut" :label="lut" :value="lut" />
+                <v-radio-group v-if="current_image===ImageType.EXPERIMENTAL"  style="margin-top: 0" v-model="LUT_upload">
+                        <v-switch
+                                v-model="invert_LUT_upl"
+                                label="invert LUT"
+                                :color="current_image"
+                                style="margin-top: 0"
+                        ></v-switch>
+                        <v-radio :color="current_image" v-for="lut in LUT_list" :key="lut" :label="lut" :value="lut" />
                 </v-radio-group>
             </v-list-item>
         </v-list>
@@ -150,13 +162,27 @@
             LUT_analytic: 'grayscale',  // Current lut selection for the analytic image
             LUT_upload : 'grayscale',   // Current lut selection for the experimental (uploaded) image
             LUT_list: ['grayscale', 'inferno', 'mako', 'cyan', 'magenta','red', 'green'],
+            invert_LUT_ana: false,
+            invert_LUT_upl: false,
             filterString: '',
             ImageType: ImageType
         }),
         methods: {
             buildFilterString(){
-                const filterStringAnalytic = `url(#minmax_a) url(#${this.LUT_analytic})`;
-                const filterStringUpload =  `url(#minmax_b) url(#${this.LUT_upload})`;
+                let filterStringAnalytic;
+                let filterStringUpload;
+                // analytic filter String
+                if (this.invert_LUT_ana){
+                    filterStringAnalytic = `url(#minmax_a) invert(1) url(#${this.LUT_analytic})  `;
+                } else {
+                    filterStringAnalytic = `url(#minmax_a) url(#${this.LUT_analytic})`;
+                }
+                // Experimental (upload) filter string
+                if (this.invert_LUT_upl) {
+                    filterStringUpload =  `url(#minmax_b) invert(1) url(#${this.LUT_upload})`;
+                } else {
+                    filterStringUpload =  `url(#minmax_b) url(#${this.LUT_upload})`;
+                }
                 this.$emit('new_filter_string', [filterStringAnalytic, filterStringUpload]) // send string to parent components
                 this.$emit('lut_update') // we need to trigger event to make sure the updated plot is zoomed and panned after update
             },
@@ -165,7 +191,7 @@
             console.log('[LUT manager loaded]')
             // set up watches
             for ( const property of ['LUT_analytic', 'LUT_upload', 'max_ana', 'min_ana', 'offset_ana',
-                'gamma_ana', 'max_upl', 'min_upl', 'offset_upl', 'gamma_upl'] ) {
+                'gamma_ana', 'max_upl', 'min_upl', 'offset_upl', 'gamma_upl', 'invert_LUT_ana', 'invert_LUT_upl'] ) {
                 // watch
                 this.$watch(property, this.buildFilterString);
             }
