@@ -4,7 +4,7 @@
         <template v-slot:activator="{ on: menu, attrs }">
             <v-tooltip bottom>
                 <template v-slot:activator="{ on: tooltip }">
-                    <v-btn v-bind="attrs" icon v-on="{ ...tooltip, ...menu }" class="display-controls-button">
+                    <v-btn v-bind="attrs" icon color="var(--bw-button-color)" v-on="{ ...tooltip, ...menu }" class="display-controls-button">
                         <v-icon > mdi-palette </v-icon>
                     </v-btn>
                 </template>

@@ -150,11 +150,11 @@
                 // get the div we will draw in
                 this.container = document.querySelector( element_name );
                 this.scene = new THREE.Scene();
-                this.scene.background = new THREE.Color( );
+                //this.scene.background = new THREE.Color( );
 
 
                 // setup render window
-                this.renderer = new THREE.WebGLRenderer( { antialias: true} );
+                this.renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true} );
                 this.renderer.setPixelRatio( window.devicePixelRatio );
                 this.renderer.setSize( this.container.offsetWidth , this.container.offsetHeight );
                 let GLwindow = this.container.appendChild( this.renderer.domElement );

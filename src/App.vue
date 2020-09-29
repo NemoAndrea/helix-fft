@@ -1,8 +1,32 @@
 <template>
   <v-app>
-    <v-main>
+    <v-main >
       <div class="layout-box">
-        <header ><img src="../public/logo_text.svg" class="logo"/> </header>
+        <header ><div class="logo"></div>
+          <span class="darkmode-mobile"><v-tooltip v-if="!darkMode" top>
+          <template v-slot:activator="{ on }">
+            <v-btn
+                    icon
+                    color="#121212"
+                    @click="setDarkMode(true)"
+                    v-on="on">
+              <v-icon>mdi-weather-night</v-icon>
+            </v-btn>
+          </template>
+          <span>Dark Mode</span>
+        </v-tooltip>
+          <v-tooltip v-if="darkMode" top>
+            <template v-slot:activator="{ on }">
+              <v-btn
+                      icon
+                      color="#f9c72a"
+                      @click="setDarkMode(false)"
+                      v-on="on">
+                <v-icon>mdi-white-balance-sunny</v-icon>
+              </v-btn>
+            </template>
+            <span>Light Mode</span>
+          </v-tooltip></span></header>
         <div class="layout-left">
           <div class="rotated"><a href="https://nemoandrea.github.io/" target="_blank">Built by Nemo Andrea</a></div>
           <div class="rotated"><a href="https://github.com/NemoAndrea/helix-fft" target="_blank">Source & Documentation</a></div>
@@ -109,7 +133,33 @@
           </div>
         </div>
         <div class="layout-right"></div>
-        <footer ><a href="https://twitter.com/cursed_tubule" target="_blank">Twitter </a></footer>
+        <footer >
+          <v-tooltip v-if="!darkMode" top>
+            <template v-slot:activator="{ on }">
+              <v-btn
+                      icon
+                      color="#121212"
+                      @click="setDarkMode(true)"
+                      v-on="on">
+                <v-icon>mdi-weather-night</v-icon>
+              </v-btn>
+            </template>
+            <span>Dark Mode</span>
+          </v-tooltip>
+          <v-tooltip v-if="darkMode" top>
+            <template v-slot:activator="{ on }">
+              <v-btn
+                      icon
+                      color="#f9c72a"
+                      @click="setDarkMode(false)"
+                      v-on="on">
+                <v-icon>mdi-white-balance-sunny</v-icon>
+              </v-btn>
+            </template>
+            <span>Light Mode</span>
+          </v-tooltip>
+          <a href="https://twitter.com/cursed_tubule" target="_blank" style="margin-left: 1rem">Twitter </a>
+        </footer>
       </div>
     </v-main>
   </v-app>
@@ -139,6 +189,7 @@ export default {
     updateCounter: 0,
     modelURL: '',
     shareText: '',
+    darkMode: false,
   }),
   watch: {
     modelName: {
@@ -189,23 +240,54 @@ export default {
         document.title = 'Helixiser';
       }
     },
+
+    setDarkMode( shouldBeOn ) {
+      if (shouldBeOn) {
+        this.darkMode = true;
+        document.body.setAttribute('data-theme', 'dark');
+        this.$vuetify.theme.dark = this.darkMode;
+        localStorage.setItem("dark_theme", this.darkMode.toString());
+      } else {
+        this.darkMode = false;
+        document.body.removeAttribute('data-theme');
+        this.$vuetify.theme.dark = this.darkMode;
+        localStorage.setItem("dark_theme", this.darkMode.toString());
+      }
+    }
   },
   mounted() {
     console.log('[ Loaded main component ]');
+    //load last dark theme setting from local storage
+    const last_theme_setting = localStorage.getItem("dark_theme");
+    last_theme_setting === 'true' ? this.setDarkMode( true ) : this.setDarkMode( false );
   }
 };
 </script>
 
 <style>
   :root {
-    --primary: salmon;
+    --primary: salmon; /*#FA8072*/
     --mygrey: #ececec;
     --secondary: #808080;
+    /*theme specific variables*/
+    --color-bg: #ffffff;
+    --bw-text-color: rgba(0,0,0,0.95);
+    --bw-button-color: rgba(0,0,0,0.54);
+    --bw-slider-track-color: darkgrey;
   }
 
   ::selection {
     background-color: pink;
   }
+
+  [data-theme="dark"] {
+    --color-bg: #121212;
+    --bw-text-color: rgba(255,255,255,0.87);
+    --primary: cadetblue;
+    --bw-button-color: rgba(255,255,255,0.60);
+    --bw-slider-track-color: rgba(255,255,255,0.10);
+  }
+
 
   .layout-box{
     display: grid;
@@ -213,11 +295,14 @@ export default {
     width: 100vw;
     height: 100vh;
     overflow-y: scroll;
+    background-color: var(--color-bg);
   }
 
   header{
     grid-column: 1 / 4;
-    margin: 2rem 0 1rem 4rem;
+    margin: 2rem 4rem 1rem 4rem;
+    display: flex;
+    justify-content: space-between;
   }
 
   .layout-left{
@@ -244,12 +329,15 @@ export default {
     grid-column: 1 / 4;
     color: var(--primary);
     text-align: right;
-    margin: 0.5rem;
+    margin: 0.2rem 0.5rem;
     font-weight: bold;
   }
 
   .logo{
     height: 3rem;
+    width: 14rem;
+    background-color: var(--primary);
+    mask: url("../public/logo_text.svg") no-repeat center / contain;;
   }
 
   .ui-box{
@@ -265,6 +353,8 @@ export default {
 
   .ui-realspace-panel{
     flex: 0 1 15rem;
+    background-color: var(--color-bg);
+    z-index: 2;
   }
 
   .ui-fft-panel{
@@ -283,6 +373,7 @@ export default {
     padding: 2rem;
     border:2px solid var(--primary);
     border-radius: 0 30px 30px 30px;
+    color: var(--bw-text-color);
   }
 
   .card-title{
@@ -321,18 +412,22 @@ export default {
     justify-content: space-between;
   }
 
+  .darkmode-mobile {
+    display: none;
+  }
+
   a {text-decoration: none; color: var(--primary) !important;}
 
   @media only screen and (max-width: 600px) {
 
     .logo{
       height: 2rem;
+      width: 9.3rem;
+      fill: green;
     }
 
     header{
-      margin-top: 1rem;
-      margin-bottom: 0;
-      margin-left: 1rem;
+      margin: 1rem 1rem 0 1rem;
     }
 
     footer{
@@ -389,6 +484,10 @@ export default {
 
     .ui-realspace-panel, .ui-fft-panel, .ui-command-panel {
       flex-basis: 100%;
+    }
+
+    .darkmode-mobile {
+      display: block;
     }
   }
 </style>

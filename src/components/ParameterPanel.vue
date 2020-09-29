@@ -29,13 +29,13 @@
                         <div class="handedness-button">
                             <v-tooltip bottom v-if="helix['handedness'] === 'right'">
                                 <template v-slot:activator="{ on }">
-                                    <v-icon v-on="on" @click="toggleHandedness(helix)"> mdi-axis-z-rotate-counterclockwise</v-icon>
+                                    <v-icon color="var(--bw-button-color)" v-on="on" @click="toggleHandedness(helix)"> mdi-axis-z-rotate-counterclockwise</v-icon>
                                 </template>
                                 <span>Make left-handed helix</span>
                             </v-tooltip>
                             <v-tooltip bottom v-if="helix['handedness'] === 'left'">
                                 <template v-slot:activator="{ on }">
-                                    <v-icon v-on="on" @click="toggleHandedness(helix)"> mdi-axis-z-rotate-clockwise</v-icon>
+                                    <v-icon color="var(--bw-button-color)" v-on="on" @click="toggleHandedness(helix)"> mdi-axis-z-rotate-clockwise</v-icon>
                                 </template>
                                 <span>Make right handed helix</span>
                             </v-tooltip>
@@ -43,7 +43,7 @@
                         <div class="delete-button">
                             <v-tooltip bottom>
                                 <template v-slot:activator="{ on }">
-                                    <v-icon v-on="on" @click="resetParameters(index)"> mdi-minus-circle </v-icon>
+                                    <v-icon color="var(--bw-button-color)" v-on="on" @click="resetParameters(index)"> mdi-minus-circle </v-icon>
                                 </template>
                                 <span>Delete helix</span>
                             </v-tooltip>
@@ -51,7 +51,7 @@
                         <div class="copy-button">
                             <v-tooltip bottom>
                                 <template v-slot:activator="{ on }">
-                                    <v-icon v-on="on" @click="copyHelixParams(index)"> mdi-content-copy</v-icon>
+                                    <v-icon color="var(--bw-button-color)" v-on="on" @click="copyHelixParams(index)"> mdi-content-copy</v-icon>
                                 </template>
                                 <span>Copy params to new helix</span>
                             </v-tooltip>

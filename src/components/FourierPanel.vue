@@ -7,7 +7,6 @@
                         <v-tooltip top>
                             <template v-slot:activator="{ on }">
                                     <span class="current_LUT_image highlight primarycol" v-on="on"
-
                                           @click="current_LUT_image = ImageType.EXPERIMENTAL">
                                         Analytic image
                                     </span>
@@ -19,7 +18,6 @@
                         <v-tooltip top>
                             <template v-slot:activator="{ on }">
                                     <span class="current_LUT_image highlight secondarycol" v-on="on"
-
                                           @click="current_LUT_image = ImageType.ANALYTIC">
                                         Experimental image
                                     </span>
@@ -47,7 +45,8 @@
                         <template v-slot:activator="{ on: menu, attrs }">
                             <v-tooltip bottom>
                                 <template v-slot:activator="{ on: tooltip }">
-                                    <v-btn v-bind="attrs" icon v-on="{ ...tooltip, ...menu }" class="display-controls-button">
+                                    <v-btn v-bind="attrs" color="var(--bw-button-color)" icon
+                                           v-on="{ ...tooltip, ...menu }" class="display-controls-button">
                                         <v-icon > mdi-tape-measure </v-icon>
                                     </v-btn>
                                 </template>
@@ -65,8 +64,8 @@
                             <v-subheader>DISPLAY STYLE</v-subheader>
                             <v-list-item ripple>
                                 <v-radio-group v-model="coordinates_as_frequency">
-                                    <v-radio label="frequency [1/nm]" :value="true"></v-radio>
-                                    <v-radio label="wavelength (1/f)" :value="false"></v-radio>
+                                    <v-radio color="var(--primary)" label="frequency [1/nm]" :value="true"></v-radio>
+                                    <v-radio color="var(--primary)" label="wavelength (1/f)" :value="false"></v-radio>
                                 </v-radio-group>
                             </v-list-item>
                         </v-list>
@@ -75,11 +74,9 @@
                     <v-tooltip bottom >
                         <template v-slot:activator="{ on }">
                             <v-btn
-                                    icon
-                                    @click="toggle_maxima_overlay"
-                                    v-on="on"
-                                    class="display-controls-button"
-                            >
+                                    icon color="var(--bw-button-color)"
+                                    @click="toggle_maxima_overlay"  v-on="on"
+                                    class="display-controls-button" >
                                 <v-icon > mdi-altimeter </v-icon>
                             </v-btn>
                         </template>
@@ -88,7 +85,7 @@
                     <!-- SET PLOT SCALE -->
                     <v-tooltip bottom >
                         <template v-slot:activator="{ on }">
-                            <v-icon v-on="on" @click="update_plot_scale(true)"
+                            <v-icon v-on="on" color="var(--bw-button-color)" @click="update_plot_scale(true)"
                                     class="display-controls-button"> mdi-arrow-split-horizontal</v-icon>
                         </template>
                         <span>resize diffraction plot to fit current n</span>
@@ -99,14 +96,14 @@
                             <v-tooltip bottom >
                                 <template v-slot:activator="{ on: tooltip }">
                                     <v-btn v-bind="attrs" v-on="{ ...tooltip, ...menu }" icon
-                                           class="display-controls-button">
+                                           class="display-controls-button" color="var(--bw-button-color)">
                                         <v-icon> mdi-microscope </v-icon>
                                     </v-btn>
                                 </template>
                                 <span> Upload experimental helix image </span>
                             </v-tooltip>
                         </template>
-                        <div shaped class="upload-window">
+                        <div class="upload-window">
                             <div class="upload-menu-title">
                                 <v-subheader>UPLOAD EXPERIMENTAL IMAGE</v-subheader>
                                 <v-btn icon color="var(--primary)" @click="show_upload_dialog=false"
@@ -165,7 +162,7 @@
                             hide-details
                             class="align-center"
                             color="var(--primary)"
-                            track-color="darkgrey"
+                            track-color="var(--bw-slider-track-color)"
                     />
                     <v-tooltip bottom><template v-slot:activator="{ on }"> <v-btn v-show="visible['analytic']" icon color="var(--primary)" @click="visible['analytic']=false"  class="hide-button" v-on="on">
                         <v-icon>mdi-eye</v-icon>
@@ -185,7 +182,7 @@
                                   :min=-1
                                   :step=0.05
                                   color="var(--primary)"
-                                  track-color="darkgrey"
+                                  track-color="var(--bw-slider-track-color)"
                                   hide-details
                         />
                         <v-slider class="ma-0 pa-0"
@@ -196,7 +193,7 @@
                                   :min=0.1
                                   :step=0.1
                                   color="var(--primary)"
-                                  track-color="darkgrey"
+                                  track-color="var(--bw-slider-track-color)"
                         />
                     </div>
                 </div>
@@ -213,7 +210,7 @@
                             hide-details
                             class="align-center"
                             color="var(--secondary)"
-                            track-color="darkgrey"
+                            track-color="var(--bw-slider-track-color)"
                     />
                     <v-tooltip bottom><template v-slot:activator="{ on }"> <v-btn v-show="visible['upload']" icon color="var(--secondary)" @click="visible['upload']=false"  v-on="on" class="hide-button">
                         <v-icon>mdi-eye</v-icon>
@@ -233,7 +230,7 @@
                                   :min=-1
                                   :step=0.05
                                   color="var(--secondary)"
-                                  track-color="darkgrey"
+                                  track-color="var(--bw-slider-track-color)"
                                   hide-details
                         />
                         <v-slider class="ma-0 pa-0"
@@ -244,7 +241,7 @@
                                   :min=0.1
                                   :step=0.1
                                   color="var(--secondary)"
-                                  track-color="darkgrey"
+                                  track-color="var(--bw-slider-track-color)"
                         />
                     </div>
                 </div>
@@ -800,11 +797,12 @@
 
     .download{
         margin: 4px;
+        color: var(--bw-button-color)
     }
 
     .upload-window{
         width: 44rem;
-        background-color: white;
+        background-color: var(--color-bg);
         padding: 0.4rem 1rem 1rem 1rem;
 
         display: grid;
@@ -840,6 +838,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        color: var(--bw-text-color);
     }
 
     .upload-menu-header{
