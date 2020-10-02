@@ -2,12 +2,6 @@
     <div>
         <div class="helix-title">
             <div class="card-title">Helix parameters</div>
-<!--            <v-tooltip bottom >-->
-<!--                <template v-slot:activator="{ on }">-->
-<!--                    <div v-on="on" @click="resetParameters(-1)"><v-icon > mdi-backspace </v-icon></div>-->
-<!--                </template>-->
-<!--                <span>Clear all helices</span>-->
-<!--            </v-tooltip>-->
         </div>
         <v-form
                 ref="form"
@@ -68,7 +62,7 @@
                                 required
                                 outlined
                                 color="var(--primary)"
-                                suffix="nm"
+                                :suffix=unit.label
                                 type="number"
                         ></v-text-field>
 
@@ -79,7 +73,7 @@
                                 required
                                 outlined
                                 color="var(--primary)"
-                                suffix="nm"
+                                :suffix=unit.label
                                 type="number"
                         ></v-text-field>
 
@@ -100,7 +94,7 @@
                                 required
                                 outlined
                                 color="var(--primary)"
-                                suffix="nm"
+                                :suffix=unit.label
                                 type="number"
                         ></v-text-field>
 
@@ -114,7 +108,7 @@
                                     outlined
                                     required
                                     color="var(--primary)"
-                                    suffix="nm"
+                                    :suffix=unit.label
                                     type="number"
                             ></v-text-field>
                             </div>
@@ -199,6 +193,12 @@
 <script>
     export default {
         name: "ParameterPanel",
+        props: {
+            unit: {
+                type: Object,
+                default: function () { return {label:'Å', factor: 0.1} }
+                },
+        },
         data: () => ({
             valid: false,
             liveCompute: false,
@@ -218,7 +218,7 @@
             inputInFocus: 1,
             snackbar: false,
             snackText: 'unspecified',
-            modelName: ''
+            modelName: '',
         }),
         watch: {
             // eslint-disable-next-line no-unused-vars
@@ -399,6 +399,10 @@
                 }
                 // update the other components on this new helixfamily
                 this.sendHelixFamily();
+            },
+
+            test5 (arg) {
+                console.log(arg)
             }
         },
         mounted() {
@@ -472,5 +476,9 @@
     }
     .fade-enter /* .fade-leave-active below version 2.1.8 */ {
         opacity: 0;
+    }
+
+    .unit-append{
+        padding: 0.2rem;
     }
 </style>

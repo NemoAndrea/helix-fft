@@ -64,7 +64,7 @@
                             <v-subheader>DISPLAY STYLE</v-subheader>
                             <v-list-item ripple>
                                 <v-radio-group v-model="coordinates_as_frequency">
-                                    <v-radio color="var(--primary)" label="frequency [1/nm]" :value="true"></v-radio>
+                                    <v-radio color="var(--primary)" :label="'frequency[1/'+unit.label+']'" :value="true"></v-radio>
                                     <v-radio color="var(--primary)" label="wavelength (1/f)" :value="false"></v-radio>
                                 </v-radio-group>
                             </v-list-item>
@@ -133,7 +133,7 @@
                                     <div><div class="upload-menu-header">Specify pixel size</div>
                                 <v-text-field label="Pixel size"
                                               :rules="numberRules"
-                                              suffix="nm"
+                                              :suffix=unit.label
                                               color="var(--primary)"
                                               type="number" v-model="uploadScale"
                                               autofocus></v-text-field></div>
@@ -297,8 +297,8 @@
                 <!--style="background-color: red; opacity: 30%"-->
                 <svg class="rasterImageOverlay"  ></svg>
                 <div v-show="!coordinates['hidden'] && this.updateCounter > 0" class="coordinates-overlay">
-                    <div v-if="coordinates_as_frequency"> f: {{coordinates['d'].toFixed(2)}} 1/nm (z: {{coordinates['z'].toFixed(2)}} 1/nm, r: {{coordinates['r'].toFixed(2)}} 1/nm) </div>
-                    <div v-if="!coordinates_as_frequency"> 1/f: {{coordinates['d'].toFixed(2)}} nm (z: {{coordinates['z'].toFixed(2)}} nm, r: {{coordinates['r'].toFixed(2)}} nm)</div>
+                    <div v-if="coordinates_as_frequency"> f: {{coordinates['d'].toFixed(2)}} 1/{{unit.label}} (z: {{coordinates['z'].toFixed(2)}} 1/{{unit.label}}, r: {{coordinates['r'].toFixed(2)}} 1/{{unit.label}}) </div>
+                    <div v-if="!coordinates_as_frequency"> 1/f: {{coordinates['d'].toFixed(2)}} {{unit.label}} (z: {{coordinates['z'].toFixed(2)}} {{unit.label}}, r: {{coordinates['r'].toFixed(2)}} {{unit.label}})</div>
                 </div>
             </v-responsive></div>
 
@@ -342,6 +342,14 @@
             externalDisplayParams: {
                 type: Object
             },
+            rasterSize: {
+                type: Number,
+                default: 512
+            },
+            unit: {
+                type: Object,
+                default: function () { return {label:'Å', factor: 0.1} }
+            },
         },
         watch: {
             // eslint-disable-next-line no-unused-vars
@@ -351,6 +359,12 @@
             visible: {  // make sure we also re-draw the image after toggling visibility.
                 deep: true,
                 handler: function () { this.zoomDiffractionPlot( this.lastTransform) }
+            },
+            rasterSize: {
+                handler: function () {
+                    this.canvas.width = this.rasterSize;
+                    this.canvas.height = this.rasterSize;
+                }
             },
             n_order: {
                 handler: function () { this.updateFFT( false ) }
@@ -370,7 +384,6 @@
             overlay: null,
             ctx: null,
 
-            rasterSize: 512,
             displayFac: 1,
             plot_scale: 0.01,
             camera: null,
@@ -416,7 +429,7 @@
                 if (autoscale) { this.update_plot_scale(false) }
 
                 let FFT_image;
-                console.time('FFT-analytic-wasm');  //
+                console.time('diffraction-analytic-wasm');  //
                 FFT_image = this.wasm_fft_analytic( this.helixFamily, this.n_order, this.m_order,
                     this.plot_scale, this.rasterSize );
 
@@ -424,8 +437,7 @@
                 this.ctx.putImageData( newImageData, 0, 0 );
 
                 this.image.src = this.canvas.toDataURL(); // produces a PNG file
-                console.timeEnd('FFT-analytic-wasm');
-                this.imageDataTest = FFT_image;
+                console.timeEnd('diffraction-analytic-wasm');
                 this.refreshContrast();  // make sure to apply existing contrast
             },
 
@@ -644,9 +656,6 @@
             this.ctx = this.canvas.getContext( '2d' );
             this.ctx.imageSmoothingEnabled = false;  // ensure we have clear pixelation (no smoothing)
             this.ctx.globalCompositeOperation = 'lighten';  //additive colour blending
-
-
-            this.imageDataTest = new Uint8Array( 4 * this.rasterSize * this.rasterSize );
 
             // initialise the Image objects
             this.image = new Image();

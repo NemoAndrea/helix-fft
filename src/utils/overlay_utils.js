@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 
 export function  draw_overlay (svg_el, wasm_bessel_max, helix, m_order, n_order_list, scale_factor ) {
-    const colors = ['white',  '#FF5d5d', 'var(--primary)','#ffc013','#ffdb79', '#1f66e5', '#6495ED', '#505050', '#B8B8B8'];
+    const colors = ['white',  '#FF5d5d', '#FA8072','#ffc013','#ffdb79', '#1f66e5', '#6495ED', '#505050', '#B8B8B8'];
     let m_vals = [];
     for (let i = 0; i < m_order+1; i++) {
         m_vals.push(i);

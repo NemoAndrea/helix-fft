@@ -7,7 +7,7 @@
           <template v-slot:activator="{ on }">
             <v-btn
                     icon
-                    color="#121212"
+                    color="rgba(0,0,0,0.54)"
                     @click="setDarkMode(true)"
                     v-on="on">
               <v-icon>mdi-weather-night</v-icon>
@@ -43,6 +43,7 @@
                         color="white"
                 ></v-text-field>
               </div>
+
               <div class="meta-button-box">
                 <v-btn outlined color="white" @click="loadExample()">Load example</v-btn>
                 <div class="share-buttons">
@@ -103,12 +104,49 @@
                       </v-list-item>
                     </v-list>
                   </v-menu>
-
+                  <v-menu max-width="var(--more-options-menu-width)" bottom :close-on-click=true transition="slide-y-transition" :offset-y=true >
+                    <template v-slot:activator="{ on:menu , attrs }"><v-tooltip bottom >
+                        <template v-slot:activator="{ on:tooltip }">
+                          <v-btn dark icon v-bind="attrs" v-on="{ ...tooltip, ...menu }">
+                            <v-icon>mdi-dots-vertical</v-icon>
+                          </v-btn>
+                        </template>
+                        <span>More settings</span>
+                    </v-tooltip></template>
+                    <div class="more-options">
+                    <v-card class="more-options-card">
+                      <v-card-title>
+                        Set distance units
+                      </v-card-title>
+                      <v-card-subtitle>Select a distance unit. Your choice will be included in the exported model.</v-card-subtitle>
+                      <v-card-actions>
+                        <v-btn v-for="unit_type in Object.keys(unitTypes)" :key="unit_type" text color="var(--primary)"
+                        @click="setUnit(unit_type)">
+                          {{unit_type}}
+                        </v-btn>
+                      </v-card-actions>
+                    </v-card>
+                    <v-card>
+                      <v-card-title>
+                        Set image dimensions
+                      </v-card-title>
+                      <v-card-subtitle> Set the dimensions of the diffraction pattern. The resulting image will always
+                      be square. Values above the default of 512px will increase computational time.</v-card-subtitle>
+                      <v-card-actions>
+                        <div class="rastersize-box">
+                          <v-btn icon color="var(--primary)" @click="setRasterSize(rasterSize/2)"><v-icon >mdi-minus</v-icon></v-btn>
+                          {{rasterSize}}
+                          <v-btn icon color="var(--primary)" @click="setRasterSize(rasterSize*2)"><v-icon>mdi-plus</v-icon></v-btn>
+                        </div>
+                      </v-card-actions>
+                    </v-card></div>
+                  </v-menu>
                 </div>
               </div>
             </div>
             <div class="card">
               <parameter-panel
+                      :unit="unit"
                       v-on:updateHelixFamily="setHelixFamily($event)"
                       v-on:computeHelixFamily="computeHelixFamily()"
                       v-on:updateName="modelName = arguments[0]"
@@ -126,7 +164,9 @@
                       :helixFamily="helixFamily"
                       :updateCounter="updateCounter"
                       :name="modelName"
+                      :unit="unit"
                       :externalDisplayParams="displaySettings"
+                      :rasterSize="rasterSize"
                       v-on:exportDisplayParams="displaySettings = arguments[0]"
                       ref="fourierPanel"
                 />
@@ -138,7 +178,7 @@
             <template v-slot:activator="{ on }">
               <v-btn
                       icon
-                      color="#121212"
+                      color="rgba(0,0,0,0.54)"
                       @click="setDarkMode(true)"
                       v-on="on">
                 <v-icon>mdi-weather-night</v-icon>
@@ -161,6 +201,16 @@
           <a href="https://twitter.com/cursed_tubule" target="_blank" style="margin-left: 1rem">Twitter </a>
         </footer>
       </div>
+      <v-snackbar v-model="snackbar">
+        {{ snackText }}
+        <template v-slot:action="{ attrs }">
+          <v-btn
+                  color="pink"
+                  text
+                  v-bind="attrs"
+                  @click="snackbar = false">
+            Close   </v-btn>        </template>
+      </v-snackbar>
     </v-main>
   </v-app>
 </template>
@@ -171,6 +221,7 @@ import FourierPanel from "./components/FourierPanel";
 import ParameterPanel from "./components/ParameterPanel";
 import Vue from 'vue'
 import VueSocialSharing from 'vue-social-sharing'
+import { Unit } from './utils/app_utils'
 
 Vue.use(VueSocialSharing);
 
@@ -190,6 +241,11 @@ export default {
     modelURL: '',
     shareText: '',
     darkMode: false,
+    rasterSize: 512, // we default to 512 as a rastersize for the canvas. Setting to higher values is possible.
+    unit: Unit.angstrom,  // we default to angstrom as units
+    unitTypes: Unit, // so the rendered template can access types
+    snackbar: false,
+    snackText: 'unspecified',
   }),
   watch: {
     modelName: {
@@ -252,6 +308,31 @@ export default {
         document.body.removeAttribute('data-theme');
         this.$vuetify.theme.dark = this.darkMode;
         localStorage.setItem("dark_theme", this.darkMode.toString());
+
+      }
+    },
+
+    setUnit( new_unit ) {
+      if ( Object.keys(Unit).includes(new_unit) ) {  // is the unit in localstorage valid (i.e. defined in the Unit enum)
+        this.unit = Unit[new_unit];
+        localStorage.setItem("distance_unit", new_unit)
+      } else {  // something went wrong. This should never be the case unless you manually edit the local storage.
+        this.snackText = `Failed to set distance unit to "${new_unit}". Distance set to "nm" instead.`;
+        this.snackbar = true;
+        localStorage.setItem("distance_unit", 'angstrom')
+      }
+    },
+
+    setRasterSize( size ) {
+      if ( Math.log2(size) % 1 === 0 ) {  // is the rastersize a power of 2?
+        localStorage.setItem("canvas_rastersize", String(size));
+        this.rasterSize = size;
+        console.log('New rastersize set: ', size)
+      } else {
+        this.snackText = `Failed to set canvas size to ${size}. Distance set to 512 instead.`;
+        this.snackbar = true;
+        localStorage.setItem("canvas_rastersize", String(512));
+        this.rasterSize = 512;
       }
     }
   },
@@ -260,6 +341,14 @@ export default {
     //load last dark theme setting from local storage
     const last_theme_setting = localStorage.getItem("dark_theme");
     last_theme_setting === 'true' ? this.setDarkMode( true ) : this.setDarkMode( false );
+    // load rastersize from local storage. If it wasn't set before, default to 512.
+    const canvas_rastersize = localStorage.getItem("canvas_rastersize");
+    canvas_rastersize !== null ? this.setRasterSize( Number(canvas_rastersize) ) : localStorage
+            .setItem("canvas_rastersize", String(this.rasterSize));
+    // load unit choice from local storage.
+    const local_unit = localStorage.getItem("distance_unit");
+    local_unit !== null ? this.setUnit( local_unit ) : localStorage.setItem("distance_unit", 'angstrom');
+
   }
 };
 </script>
@@ -267,6 +356,7 @@ export default {
 <style>
   :root {
     --primary: salmon; /*#FA8072*/
+    --selection: pink;
     --mygrey: #ececec;
     --secondary: #808080;
     /*theme specific variables*/
@@ -274,18 +364,21 @@ export default {
     --bw-text-color: rgba(0,0,0,0.95);
     --bw-button-color: rgba(0,0,0,0.54);
     --bw-slider-track-color: darkgrey;
+    /*tool variables*/
+    --more-options-menu-width: 40%;
   }
 
   ::selection {
-    background-color: pink;
+    background-color: var(--selection);
   }
 
   [data-theme="dark"] {
     --color-bg: #121212;
     --bw-text-color: rgba(255,255,255,0.87);
-    --primary: cadetblue;
+    --primary: cadetblue; /*#5f9ea0*/
     --bw-button-color: rgba(255,255,255,0.60);
     --bw-slider-track-color: rgba(255,255,255,0.10);
+    --selection: #caeaeb;
   }
 
 
@@ -407,6 +500,11 @@ export default {
     margin-bottom: 1rem;
   }
 
+  .more-options-card {
+    margin-bottom: 8px;
+  }
+
+
   .meta-button-box{
     display: flex;
     justify-content: space-between;
@@ -416,9 +514,22 @@ export default {
     display: none;
   }
 
+  .rastersize-box {
+    display: flex;
+    align-items: center;
+  }
+
+  .rastersize-icon {
+    color: var(--primary);
+  }
+
   a {text-decoration: none; color: var(--primary) !important;}
 
   @media only screen and (max-width: 600px) {
+    :root{
+      --more-options-menu-width: 92%;
+    }
+
 
     .logo{
       height: 2rem;
@@ -471,6 +582,7 @@ export default {
       padding: 0;
     }
 
+
     .layout-central{
       margin: 0.2rem;
       grid-column: 1;
@@ -481,6 +593,8 @@ export default {
       font-size: 1.1rem;
       font-weight: bold;
     }
+
+
 
     .ui-realspace-panel, .ui-fft-panel, .ui-command-panel {
       flex-basis: 100%;
