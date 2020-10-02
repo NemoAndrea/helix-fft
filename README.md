@@ -48,3 +48,18 @@ If you have these two installed on your system, you can run the project locally 
 
 Which will run the project on localhost. It should also automatically tie in and compile the WebAssembly required for the project. The first time you execute this, all the dependencies specified in `package.json` and `cargo.toml` for Javascript and Rust respectively will be installed (which may take a while). 
 
+# Running locally and long term support
+
+If you want to run helixiser locally (or if you fear the the hosting page will go down at some point in the future), you can use the python script in [tool/run_build_local.py](tool/run_build_local.py). You will need to do the following:
+
+1. clone the helixiser repository (https://github.com/NemoAndrea/helixiser)
+
+   > Note: the helixiser repository is the **deployed** version of this repository. It is what you get if you run `npm run build` in **helix-fft** repository's directory.
+
+2. copy the the `run_build_local.py` file into the root of the /helixiser repository.
+3. run the python file **from** the /helixiser directory. (i.e. os.path is the /helixiser directory)
+
+Now helixiser should open in a browser window. We are done!
+
+> Note: the helixiser repository only contains the last build version of helixiser. If you want an older version to run locally, you will have to use the version history of **helix-fft** and run `npm run build yourself`. You can then copy over the build (which will be stored in `/dist`) to a folder named "helixiser" and proceed from step `2`. 
+
