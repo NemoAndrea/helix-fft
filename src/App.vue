@@ -362,6 +362,7 @@ export default {
     /*theme specific variables*/
     --color-bg: #ffffff;
     --bw-text-color: rgba(0,0,0,0.95);
+    --bw-faint-color: rgba(0,0,0,0.30);
     --bw-button-color: rgba(0,0,0,0.54);
     --bw-slider-track-color: darkgrey;
     /*tool variables*/
@@ -375,6 +376,7 @@ export default {
   [data-theme="dark"] {
     --color-bg: #121212;
     --bw-text-color: rgba(255,255,255,0.87);
+    --bw-faint-color: rgba(255,255,255,0.30);
     --primary: cadetblue; /*#5f9ea0*/
     --bw-button-color: rgba(255,255,255,0.60);
     --bw-slider-track-color: rgba(255,255,255,0.10);

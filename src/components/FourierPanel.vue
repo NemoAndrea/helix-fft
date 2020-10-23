@@ -300,6 +300,11 @@
                     <div v-if="coordinates_as_frequency"> f: {{coordinates['d'].toFixed(2)}} 1/{{unit.label}} (z: {{coordinates['z'].toFixed(2)}} 1/{{unit.label}}, r: {{coordinates['r'].toFixed(2)}} 1/{{unit.label}}) </div>
                     <div v-if="!coordinates_as_frequency"> 1/f: {{coordinates['d'].toFixed(2)}} {{unit.label}} (z: {{coordinates['z'].toFixed(2)}} {{unit.label}}, r: {{coordinates['r'].toFixed(2)}} {{unit.label}})</div>
                 </div>
+                <div class="no-image-notification" v-if="(uploadLoaded===false)&&(updateCounter===0)">
+                    <v-icon class="no-image-icon">mdi-information-outline</v-icon>
+                    <div ><b>No diffraction pattern to show</b> </div>
+                    <div style="opacity: 0.7">Specify helix parameters or upload an experimental image</div>
+                </div>
             </v-responsive></div>
 
         </div>
@@ -416,6 +421,7 @@
             upload_needs_fourier: null,
             show_upload_dialog: false,
             uploadScale: 0,
+            uploadLoaded: false,
             numberRules: [
                 v => !!v || 'parameter is required',
                 v => v > 0 || 'value must be larger than 0',
@@ -546,13 +552,16 @@
                         }
 
                         this.upload_image.src = ImageData_to_dataURL(newImageData);
-                        console.log('upload scale is: ', this.uploadScale);
+                        console.log('upload pixelsize is: ', this.uploadScale);
+                        localStorage.setItem("last_upload_pixelsize", String(this.uploadScale));
                         this.refreshContrast();  // make sure we apply whatever contrast we had previously set
+                        this.uploadLoaded = true;
                         this.show_upload_dialog = false; // close upload dialog
                     }
                     catch (err) {  // some kind of error, but mainly for square. TODO: proper error handling
                         this.snackText = "Oops, something went wrong with uploaded image";
                         this.snackbar = true;
+                        this.uploadLoaded = false;
                         console.log(err)
                     }
                 };
@@ -684,6 +693,11 @@
                     .on("zoom", ({transform}) => this.zoomDiffractionPlot(transform)));
             this.overlay.node();  // update the SVG
             this.$refs.LUTmanager.buildFilterString(); // intialise the fitlers
+
+            // load the last use pixel size for the experimental image (useful if you keep uplading from the same dataset)
+            // this localstroage value might be null (e.g. if never set before)
+            const last_pixelsize_storage = localStorage.getItem("last_upload_pixelsize");
+            if (last_pixelsize_storage !== null) { this.uploadScale=Number(last_pixelsize_storage) }
 
             console.log('[ Fourierpanel mounted ]');
         }
@@ -916,6 +930,21 @@
         position: relative;
         z-index: 1;
     }
+
+    .no-image-notification {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: var(--bw-faint-color);
+        text-align: center;
+    }
+
+    .no-image-icon {
+        color: var(--bw-faint-color);
+        font-size: 4rem;
+    }
+
 
     @media only screen and (max-width: 600px) {
         .card-fft{
