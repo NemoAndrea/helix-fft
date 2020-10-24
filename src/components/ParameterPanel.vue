@@ -305,7 +305,7 @@
                     // we are done parsing, let's send it over for calculation
                     console.log(`query string loaded for: ${newHelixFamily.length} helix objects`);
                     this.helixFamily = newHelixFamily;
-                    this.computeHelix(false);  // update values, but do not compute FFT to prevent loading lag
+                    this.computeHelix(true);  // update values, and immediately show diffraction pattern
                     if (displayParams) {  // if not empty
                         this.$emit('newDisplayParams', displayParams);  // we have new diffraction panel display param
                     }
