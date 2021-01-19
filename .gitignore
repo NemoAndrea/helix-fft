@@ -1,6 +1,7 @@
 # helix-FFT specific ignores
 wasm/target
 wasm/pkg
+wasm/**/*.png
 img/testing
 
 

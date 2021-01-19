@@ -1,9 +1,11 @@
 [package]
 name = "helixiser"
 version = "0.1.0"
-authors = ["Nemo Andrea"]
+authors = ["Nemo Andrea nemoandrea@outlook.com"]
 edition = "2018"
+description = "A library for the calculation of diffraction patterns of helical objects"
 readme = "README.md"
+license = "MIT"
 
 [lib]
 crate-type = ["cdylib", "rlib"]  # required for wasm-bindgen

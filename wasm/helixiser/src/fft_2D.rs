@@ -1,3 +1,6 @@
+//! # 2-dimensional FFT functions
+//!
+//! 2D FFT built on the fast 1D rustFFT library
 
 use std::cmp;
 use num::traits::Pow;

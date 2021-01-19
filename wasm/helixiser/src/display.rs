@@ -1,4 +1,6 @@
-// Image Adjustment functions
+//! # Image adjustment functions
+//!
+//! Currently not used for anything fundamental.
 
 
 pub fn adjust_contrast(image_data: Vec<f64>, offset: f64, min: f64, max: f64) -> Vec<f64> {

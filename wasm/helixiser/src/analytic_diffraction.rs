@@ -1,44 +1,39 @@
+//! # Analytic diffraction image generator
+//!
+//! Functions that build a diffraction image of a helical structure using an analytic solution
+
+use crate::bessel_utils::{ Jn };
+use crate::helix::Helix;
+
 use ndarray::{Array2, Array1, Array, ArrayView};
 use std::f64::consts::PI;
 use num:: {Complex, complex::Complex64, traits::Pow };
-use crate::bessel_utils::{ Jn };
-
-// Analytic diffraction pattern for helix object
 
 
-// a helix can be right- or left-handed and hence we opt for enum
-#[derive(Debug, Copy, Clone)]
-pub enum Handedness {
-    Right,
-    Left,
-}
-
-
-// A pure Rust object for helices
-pub struct Helix {
-    pub radius: f64,
-    pub rise: f64,
-    pub frequency: f64,
-    pub unit_size: f64,
-    pub offset: f64,
-    pub rotation: f64,
-    pub handedness: Handedness,
-}
-
-
-impl Helix {
-    pub fn pitch(&self) -> f64 {
-        self.rise * self.frequency
-    }
-
-    pub fn rotation_to_rad(&self) -> f64 {
-        self.rotation * PI / 180.
-    }
-
-    pub fn rad_per_subunit(&self) -> f64 { 2f64 * PI / self.frequency }
-}
-
-// returns a 1D array, with values in order (R,G,B,A) and then next pixel etc.
+/// Computes Analytic diffraction pattern for helix object
+///
+/// returns a vector, with values in order (R,G,B,A) and then next pixel etc.
+/// ```
+/// use helixiser::helix::{ Helix, Handedness };
+/// use helixiser::analytic_diffraction::diff_analytic;
+///
+/// let strand_1 = Helix {
+///         radius: 1.,
+///         rise: 0.34,
+///         frequency: 10.,
+///         unit_size: 0.18,
+///         offset: 0.,
+///         rotation: 0.,
+///         handedness: Handedness::Right,
+/// };
+///
+/// let strand_2 = Helix {
+///        rotation: 143.,
+///         ..strand_1  // copy remaining fields over from strand 1
+/// };
+/// //image as RGBA vector will be 512x512x4 (height x width x RGBA)elements
+/// let image_as_RGBA_vector: Vec<f64> = diff_analytic(vec![strand_1, strand_2], 6, 2, 0.01, 512);
+/// ```
 pub fn diff_analytic(helices: Vec<Helix>, n_range: u8, m_range: u8, scale: f64, raster_size: u32) -> Vec<f64> {
     let num_pix: usize = (raster_size * raster_size) as usize;
 

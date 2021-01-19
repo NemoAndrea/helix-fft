@@ -1,7 +1,7 @@
-// collection of bessel functions that are required for Helix-FFt
-// written by Nemo Andrea in 2020.
-// The approaches below are probably not the best way to use these functions for general use,
-// so I would be careful in using these functions for your own project.
+//! # collection of bessel functions
+//!
+//! The approaches to compute the functions below are probably not optimal.
+//! I would be hesitant to recommend these these functions for your own project.
 
 extern crate num;
 

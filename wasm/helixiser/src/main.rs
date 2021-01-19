@@ -1,7 +1,8 @@
-use helixiser::analytic_diffraction::{ Helix, Handedness, diff_analytic };
+use helixiser::analytic_diffraction::{ diff_analytic };
 use helixiser::display::adjust_contrast;
 use helixiser::fft_2D::{ FFT_2D, pad_image };
 use helixiser::projection_simulator::{projection_from_helix_family};
+use helixiser::helix::{ Helix, Handedness };
 
 use rustfft::num_complex::{Complex64};
 use rustfft::num_traits::Zero;

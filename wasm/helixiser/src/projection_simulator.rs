@@ -1,4 +1,9 @@
-use crate::analytic_diffraction::Helix;
+//! # Primitive simulator for helical projections
+//!
+//! Extremely primitive version of a simulator producing projection images of helices,
+//! in contrast to the analytic diffraction functions in helixiser.
+
+use crate::helix::Helix;
 use ndarray::{Array2};
 use std::f64::consts::PI;
 use num:: { traits::Pow };

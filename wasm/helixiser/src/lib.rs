@@ -9,4 +9,4 @@ pub mod display;
 pub mod analytic_diffraction;
 pub mod fft_2D;
 pub mod projection_simulator;
-mod test;
+pub mod helix;
