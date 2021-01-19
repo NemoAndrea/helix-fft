@@ -1,8 +1,11 @@
+extern crate wasm_bindgen;
+
 use wasm_bindgen::prelude::*;
-use crate::analytic_diffraction::*;
-use crate::display::{ adjust_contrast, arr_to_rgba };
-use crate::fft_2D::{ FFT_2D, pad_image };
-use crate::bessel_utils::bessel_first_max;
+
+use helixiser::analytic_diffraction::*;
+use helixiser::display::{ adjust_contrast, arr_to_rgba };
+use helixiser::fft_2D::{ FFT_2D, pad_image };
+use helixiser::bessel_utils::bessel_first_max;
 
 use rustfft::num_complex;
 
@@ -94,4 +97,20 @@ pub fn wasm_FFT(image: Vec<f64>, width: u32, height: u32) -> Vec<f64> {
 #[wasm_bindgen]  // get x value of the first maximum of Jn(x) for given n.
 pub fn wasm_bessel_first_max(n: u32) -> f64 {
     bessel_first_max(n)
+}
+
+#[wasm_bindgen]
+pub fn key_red_test(frame: Vec<f64>) -> Vec<f64> {
+    alert(&format!("{:?}", frame));
+    let tolerance: f64 = 100.0;
+    let mut r: f64;
+    let mut g: f64;
+    let mut b: f64;
+    for i in (0..frame.len()).step_by(4) {
+        r = frame[i];
+        g = frame[i + 1];
+        b = frame[i + 2];
+    }
+
+    return frame;
 }

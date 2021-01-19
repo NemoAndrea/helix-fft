@@ -1,5 +1,4 @@
 // Image Adjustment functions
-use crate::wasm_functions::alert;
 
 
 pub fn adjust_contrast(image_data: Vec<f64>, offset: f64, min: f64, max: f64) -> Vec<f64> {
@@ -11,8 +10,6 @@ pub fn adjust_contrast(image_data: Vec<f64>, offset: f64, min: f64, max: f64) ->
     // make into appropriate format
     let test = arr_to_rgba(rescaled_data);
 
-
-    // alert(&test.len().to_string());
     return test
 }
 

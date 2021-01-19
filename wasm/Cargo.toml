@@ -1,34 +1,6 @@
-[package]
-name = "helixiser"
-version = "0.1.0"
-authors = ["Nemo Andrea"]
-edition = "2018"
-readme = "README.md"
+[workspace]
 
-[lib]
-crate-type = ["cdylib", "rlib"]  # required for wasm-bindgen
-name = "helixiser"
-path = "src/lib.rs"
-
-[profile.release]
-debug = true
-
-[dependencies]
-wasm-bindgen = { version = "0.2.67", features = ["serde-serialize"] }
-ndarray = "0.13.1"
-serde = { version = "1.0.80", features = ["derive"] }
-serde_json = "1.0.32"
-serde_derive = "1.0.80"
-num = "0.3"
-rustfft = "3.0.1"
-image = "0.23.9"# only for running rust locally and debugging
-
-[dependencies.web-sys]
-version = "0.3"
-features = [ "console" ]
-
-# disable wasm-opt for release, as it throws errors
-[package.metadata.wasm-pack.profile.release]
-wasm-opt = false
-
-
+members = [
+    "helixiser",
+    "helixiser-interface",
+]

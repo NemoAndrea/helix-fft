@@ -1,0 +1,26 @@
+[package]
+name = "helixiser"
+version = "0.1.0"
+authors = ["Nemo Andrea"]
+edition = "2018"
+readme = "README.md"
+
+[lib]
+crate-type = ["cdylib", "rlib"]  # required for wasm-bindgen
+name = "helixiser"
+path = "src/lib.rs"
+
+[profile.release]
+debug = true
+
+[dependencies]
+ndarray = "0.13.1"
+num = "0.3"
+rustfft = "3.0.1"
+image = "0.23.9"# only for running rust locally and debugging
+
+# disable wasm-opt for release, as it throws errors
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+

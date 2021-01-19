@@ -18,7 +18,7 @@ module.exports = {
             .init(
                 (Plugin) =>
                     new Plugin({
-                        crateDirectory: path.resolve(__dirname, "./wasm"),
+                        crateDirectory: path.resolve(__dirname, "./wasm/helixiser-interface"),
                     })
             )
             .end()

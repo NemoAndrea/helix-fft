@@ -29,7 +29,8 @@
           </v-tooltip></span></header>
         <div class="layout-left">
           <div class="rotated"><a href="https://nemoandrea.github.io/" target="_blank">Built by Nemo Andrea</a></div>
-          <div class="rotated"><a href="https://github.com/NemoAndrea/helix-fft" target="_blank">Source & Documentation</a></div>
+          <div class="rotated"><a href="https://github.com/NemoAndrea/helix-fft/blob/master/doc/examples.md" target="_blank">Examples</a></div>
+          <div class="rotated"><a href="https://github.com/NemoAndrea/helix-fft" target="_blank">Documentation</a></div>
         </div>
         <div class="layout-central">
           <div class="ui-box ui-command-panel">
@@ -156,7 +157,6 @@
             </div>
           </div>
           <div class="ui-box ui-realspace-panel"><div class="card card-webgl">
-            <div class="card-title-float card-title">Realspace helix</div>
             <helix-display :helixFamily="helixFamily" />
           </div></div>
           <div class="ui-box ui-fft-panel">

@@ -8,8 +8,6 @@ use rustfft::num_complex::{Complex, Complex64};
 use rustfft::num_traits::Zero;
 
 use ndarray::{Array2, ArrayViewMut1, ArrayView1, ArrayView, Array, ViewRepr};
-use wasm_bindgen::__rt::core::sync::atomic::Ordering::AcqRel;
-
 // 2D fourier transform of images using the  rustfft library
 
 // Perform a forward FFT of size 1234
