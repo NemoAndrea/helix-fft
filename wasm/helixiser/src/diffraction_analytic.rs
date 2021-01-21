@@ -15,7 +15,7 @@ use num:: {Complex, complex::Complex64, traits::Pow };
 /// returns a vector, with values in order (R,G,B,A) and then next pixel etc.
 /// ```
 /// use helixiser::helix::{ Helix, Handedness };
-/// use helixiser::analytic_diffraction::diff_analytic;
+/// use helixiser::diffraction_analytic::diff_analytic;
 ///
 /// let strand_1 = Helix {
 ///         radius: 1.,

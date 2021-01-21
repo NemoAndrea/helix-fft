@@ -3,7 +3,6 @@ extern crate web_sys;  // console messages, should probably be removed
 
 #[macro_use]
 extern crate serde_derive;
-#[macro_use]
 extern crate ndarray;
 
 // different components below

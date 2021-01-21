@@ -31,7 +31,7 @@ pub fn arr_to_rgba(luminance: Vec<f64>) -> Vec<f64>{
 
 #[cfg(test)]
 mod tests {
-    use crate::display::adjust_contrast;
+    use crate::utilities::adjust_contrast;
 
     #[test]
     fn max_100() {

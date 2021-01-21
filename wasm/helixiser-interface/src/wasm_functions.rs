@@ -2,10 +2,11 @@ extern crate wasm_bindgen;
 
 use wasm_bindgen::prelude::*;
 
-use helixiser::analytic_diffraction::*;
-use helixiser::display::{ adjust_contrast, arr_to_rgba };
+use helixiser::diffraction_analytic::*;
+use helixiser::utilities::arr_to_rgba;
 use helixiser::fft_2D::{ FFT_2D, pad_image };
 use helixiser::bessel_utils::bessel_first_max;
+use helixiser::helix::{ Handedness, Helix };
 
 use rustfft::num_complex;
 
@@ -42,7 +43,7 @@ pub fn wasm_diffraction_analytic(helix_family: &JsValue, n_range: u8, m_range: u
         // convert handedness string to enum 'Handedness'
         let mut hand: Handedness = Handedness::Right;
         let JS_string = JS_helix.handedness.parse::<String>().unwrap_or("right".clone().parse().unwrap());
-        if let JS_string = String::from("left") {
+        if JS_string == String::from("left") {
             hand = Handedness::Left
         } else { hand = Handedness::Right };
 
@@ -61,7 +62,7 @@ pub fn wasm_diffraction_analytic(helix_family: &JsValue, n_range: u8, m_range: u
     diff_analytic(helices, n_range, m_range, scale, raster_size)
 }
 
-// unfortunately I do not know how to return multiple values atm through WASM, so we make a messy array
+// unfortunately I do not know how to return multiple values through WASM, so we make a messy array
 #[wasm_bindgen]  // calculate FFT of image (return the norm of complex-valued fourier transform) and dimensions
 pub fn wasm_FFT(image: Vec<f64>, width: u32, height: u32) -> Vec<f64> {
     //alert(&format!("input image is {} pixels and {} x {}", image.len(), width, height) );
@@ -97,20 +98,4 @@ pub fn wasm_FFT(image: Vec<f64>, width: u32, height: u32) -> Vec<f64> {
 #[wasm_bindgen]  // get x value of the first maximum of Jn(x) for given n.
 pub fn wasm_bessel_first_max(n: u32) -> f64 {
     bessel_first_max(n)
-}
-
-#[wasm_bindgen]
-pub fn key_red_test(frame: Vec<f64>) -> Vec<f64> {
-    alert(&format!("{:?}", frame));
-    let tolerance: f64 = 100.0;
-    let mut r: f64;
-    let mut g: f64;
-    let mut b: f64;
-    for i in (0..frame.len()).step_by(4) {
-        r = frame[i];
-        g = frame[i + 1];
-        b = frame[i + 2];
-    }
-
-    return frame;
 }

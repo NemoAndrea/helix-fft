@@ -5,8 +5,8 @@ extern crate ndarray;
 // different components below
 
 pub mod bessel_utils;
-pub mod display;
-pub mod analytic_diffraction;
+pub mod utilities;
+pub mod diffraction_analytic;
 pub mod fft_2D;
-pub mod projection_simulator;
+pub mod diffraction_simulator;
 pub mod helix;
