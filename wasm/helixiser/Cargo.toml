@@ -1,13 +1,14 @@
 [package]
 name = "helixiser"
-version = "0.1.0"
+version = "0.2.1"
 authors = ["Nemo Andrea <nemoandrea@outlook.com>"]
 edition = "2018"
-description = "A library for the calculation of diffraction patterns of helical objects"
+description = "A crate for the calculation of diffraction patterns of helical objects"
+documentation = "https://docs.rs/helixiser/"
 repository  = "https://github.com/NemoAndrea/helix-fft/tree/master/wasm/helixiser"
 readme      = "README.md"
+categories  = ["science", "simulation","visualization","multimedia::images","mathematics"]
 keywords    = ["helix", "diffraction", "wasm"]
-categories  = ["Science","Image processing"]
 license     = "MIT"
 
 [lib]
@@ -22,6 +23,7 @@ ndarray = "0.13.1"
 num = "0.3"
 rustfft = "3.0.1"
 image = "0.23.9"# only for running rust locally and debugging
+open = "1.4.0"
 
 # disable wasm-opt for release, as it throws errors
 [package.metadata.wasm-pack.profile.release]
