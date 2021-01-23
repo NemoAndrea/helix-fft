@@ -3,10 +3,11 @@ extern crate wasm_bindgen;
 use wasm_bindgen::prelude::*;
 
 use helixiser::diffraction_analytic::*;
-use helixiser::utilities::arr_to_rgba;
+use helixiser::utilities::luminance_to_rgba;
 use helixiser::fft_2D::{ FFT_2D, pad_image };
 use helixiser::bessel_utils::bessel_first_max;
 use helixiser::helix::{ Handedness, Helix };
+use helixiser::wavefront::Wavefront;
 
 use rustfft::num_complex;
 
@@ -32,7 +33,8 @@ pub struct Element {
     handedness: String
 }
 
-#[wasm_bindgen]  // function that converts JsValue to Helix Struct and then calls diff_analytic
+#[wasm_bindgen]
+/// function that converts JsValue to Helix Struct and then calls diff_analytic
 pub fn wasm_diffraction_analytic(helix_family: &JsValue, n_range: u8, m_range: u8, scale: f64, raster_size: u32) -> Vec<f64> {
     // helix_family is an array of dicts in JS.
     let JS_helices: Vec<Element> = helix_family.into_serde().unwrap();
@@ -47,23 +49,24 @@ pub fn wasm_diffraction_analytic(helix_family: &JsValue, n_range: u8, m_range: u
             hand = Handedness::Left
         } else { hand = Handedness::Right };
 
-        helices.push(Helix {
-            radius: JS_helix.radius.parse::<f64>().unwrap_or(0 as f64),
-            rise: JS_helix.rise.parse::<f64>().unwrap_or(0 as f64),
-            frequency: JS_helix.frequency.parse::<f64>().unwrap_or(0 as f64),
-            unit_size: JS_helix.unit_size.parse::<f64>().unwrap_or(0 as f64),
-            offset: JS_helix.offset.parse::<f64>().unwrap_or(0 as f64),
-            rotation: JS_helix.rotation.parse::<f64>().unwrap_or(0 as f64),
-            handedness: hand,
-        });
+        helices.push(Helix::new(
+            JS_helix.radius.parse::<f64>().unwrap_or(0 as f64),
+            JS_helix.rise.parse::<f64>().unwrap_or(0 as f64),
+            JS_helix.frequency.parse::<f64>().unwrap_or(0 as f64),
+            JS_helix.unit_size.parse::<f64>().unwrap_or(0 as f64),
+            JS_helix.offset.parse::<f64>().unwrap_or(0 as f64),
+            JS_helix.rotation.parse::<f64>().unwrap_or(0 as f64),
+            hand,
+        ));
     }
 
     // now we call the function that actually draws the image and returns it
-    diff_analytic(helices, n_range, m_range, scale, raster_size)
+    diff_analytic(helices, n_range, m_range, scale, raster_size).intensities().into_raw_vec()
 }
 
 // unfortunately I do not know how to return multiple values through WASM, so we make a messy array
-#[wasm_bindgen]  // calculate FFT of image (return the norm of complex-valued fourier transform) and dimensions
+#[wasm_bindgen]
+/// calculate FFT of image (return the norm of complex-valued fourier transform and image dimensions)
 pub fn wasm_FFT(image: Vec<f64>, width: u32, height: u32) -> Vec<f64> {
     //alert(&format!("input image is {} pixels and {} x {}", image.len(), width, height) );
 
@@ -84,7 +87,7 @@ pub fn wasm_FFT(image: Vec<f64>, width: u32, height: u32) -> Vec<f64> {
     //alert(&format!("output is {} x {}", out_width, out_height) );
 
     // Take FFT and take the log of the norm for display purposes
-    let mut out_arr: Vec<f64> = arr_to_rgba( FFT_2D(padded_image).iter().map(
+    let mut out_arr: Vec<f64> = luminance_to_rgba( FFT_2D(padded_image).iter().map(
         |val| val.norm().ln()*20f64).collect() );  // value of 20 is a bit ad-hoc currently
     //alert(&out_arr.len().to_string());
 
@@ -95,7 +98,8 @@ pub fn wasm_FFT(image: Vec<f64>, width: u32, height: u32) -> Vec<f64> {
     return out_arr
 }
 
-#[wasm_bindgen]  // get x value of the first maximum of Jn(x) for given n.
+#[wasm_bindgen]
+/// get x value of the first maximum of Jn(x) for given n.
 pub fn wasm_bessel_first_max(n: u32) -> f64 {
     bessel_first_max(n)
 }

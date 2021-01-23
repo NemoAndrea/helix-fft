@@ -1,3 +1,4 @@
+//! # Functions for exporting and loading helixiser models
 use crate::helix::Helix;
 
 /// Generate a URL to helix model in the Helxiser web application
@@ -5,8 +6,8 @@ use crate::helix::Helix;
 /// # Examples
 /// ```
 ///    use open::that;
-///    use helixiser::helix::{ Helix, Handedness };
-///    use helixiser::export::helixiser_web_link;
+///    # use helixiser::helix::{ Helix, Handedness };
+///    # use helixiser::export::helixiser_web_link;
 ///
 ///    let helix_1 = Helix {
 ///        radius: 0.5,
@@ -27,7 +28,7 @@ pub fn helixiser_web_link(name: &str, helix_family: Vec<Helix>) -> String {
     let mut web_link: String = String::new();
     // Add the base URL
     web_link.push_str("https://nemoandrea.github.io/helixiser/#");
-    // Add the meta fields (name, n, m, scale)
+    // Add the meta fields (name)
     web_link.push_str(&format!("name={}###", name));
     // specify the helices
     for helix in helix_family {

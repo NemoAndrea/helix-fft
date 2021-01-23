@@ -1,5 +1,5 @@
 use helixiser::diffraction_analytic::{ diff_analytic };
-use helixiser::utilities::adjust_contrast;
+use helixiser::utilities::{adjust_contrast, array_to_luminance, luminance_to_rgba};
 use helixiser::fft_2D::{ FFT_2D, pad_image };
 use helixiser::diffraction_simulator::{projection_from_helix_family};
 use helixiser::helix::{ Helix, Handedness };
@@ -10,6 +10,8 @@ use helixiser::export::{ helixiser_web_link };
 use rustfft::num_complex::{Complex64};
 use rustfft::num_traits::Zero;
 
+use num:: { traits::Pow };
+
 extern crate image;
 
 use std::time::{Duration, Instant};
@@ -19,40 +21,46 @@ use ndarray::{Array, Array2};
 
 
 fn main () {
-    // println!("> Example of Helical diffraction, using B-DNA as a model");
-    //
-    // let strand_1 = Helix {
-    //     radius: 1.,
-    //     rise: 0.34,
-    //     frequency: 10.,
-    //     unit_size: 0.18,
-    //     offset: 0.,
-    //     rotation: 0.,
-    //     handedness: Handedness::Right,
-    // };
-    //
-    // let strand_2 = Helix {
-    //     rotation: 143.,
-    //     ..strand_1  // copy remaining fields over from strand 1
-    // };
-    //
-    // let dna_helices: Vec<Helix> = vec![strand_1, strand_2];
-    //
-    // let now = Instant::now();  // start a timer
-    //
-    // // lets get an image (as a 1D array, with values in order (R,G,B,A) and then next pixel etc.
-    // let mut im_arr: Vec<f64> = diff_analytic(dna_helices, 5, 1, 0.01, 512);
-    //
-    // println!("It took {} ms to produce analytic diffraction pattern.", now.elapsed().as_millis());
-    //
-    // // lets make it a bit more contrast-y
-    // im_arr = adjust_contrast(im_arr, 0., 0., 100.);
-    //
-    // // convert to uint8
-    // let u_im_arr: Vec<u8> = im_arr.iter().map(|val| *val as u8).collect();
-    //
-    // // use the [image] crate to save array as an image to the project directory
-    // image::save_buffer("B-DNA_via_Rust.png", &u_im_arr, 512, 512, image::ColorType::Rgba8).unwrap();
+    println!("> Example of Helical diffraction, using B-DNA as a model");
+
+    let strand_1 = Helix {
+        radius: 1.,
+        rise: 0.34,
+        frequency: 10.,
+        unit_size: 0.18,
+        offset: 0.,
+        rotation: 0.,
+        handedness: Handedness::Right,
+    };
+
+    let strand_2 = Helix {
+        rotation: 143.,
+        ..strand_1  // copy remaining fields over from strand 1
+    };
+
+    let dna_helices: Vec<Helix> = vec![strand_1, strand_2];
+
+    let now = Instant::now();  // start a timer
+
+    // lets get an image
+    let mut complex_image = diff_analytic(dna_helices, 5, 1, 0.01, 512);
+    complex_image.rescale(511.);
+
+    println!("It took {} ms to produce analytic diffraction pattern.", now.elapsed().as_millis());
+
+    let image_rgba = luminance_to_rgba(complex_image.intensities().into_raw_vec());
+
+
+    // lets make it a bit more contrast-y
+    let im_arr = adjust_contrast(image_rgba, 0., 0., 100.);
+
+    // convert to uint8
+    let u_im_arr: Vec<u8> = im_arr.iter().map(|val| *val as u8).collect();
+
+    // use the [image] crate to save array as an image to the project directory
+    image::save_buffer("B-DNA_via_Rust.png", &u_im_arr, 512, 512, image::ColorType::Rgba8).unwrap();
+
+    complex_image.save_image("B-DNA_via_Rust_direct.png")
     //
     // ///////////////////////////////////////// FFT
     // println!("> FFT testing ...");
@@ -116,26 +124,5 @@ fn main () {
     // image::save_buffer("simulation_out.png", &sim_out, sim_projection.ncols() as u32,
     //                    sim_projection.nrows() as u32, image::ColorType::L8).unwrap();
 
-
-    let strand_1 = Helix {
-        radius: 1.,
-        rise: 0.34,
-        frequency: 10.,
-        unit_size: 0.18,
-        offset: 0.,
-        rotation: 0.,
-        handedness: Handedness::Right,
-    };
-
-    let strand_2 = Helix {
-        rotation: 180.,
-        ..strand_1  // copy remaining fields over from strand 1
-    };
-
-    let my_helices: Vec<Helix> = vec![strand_1, strand_2];
-
-    let link = helixiser_web_link("Rust", my_helices);
-    println!("{:?}", link);
-    open::that(link);
 
 }

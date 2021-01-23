@@ -9,7 +9,10 @@ extern crate num;
 use num::traits::{Pow};
 use std::f64::consts::PI;
 
-// for the validity of the calculation, see http://www.mhtlab.uwaterloo.ca/courses/me755/web_chap4.pdf
+/// Computes J0(x) ( bessel function of the first kind of zeroth order )
+///
+/// Splits the calculations into two regimes where different approximations hold
+/// for the validity of the calculation, see http://www.mhtlab.uwaterloo.ca/courses/me755/web_chap4.pdf
 pub fn J0(x: f64) -> f64 {
   let mut z = x;
   if x < 0.0 { z = -x }  // we ensure z = |x|, as J0(x) = J0(-x) anyway
@@ -22,7 +25,10 @@ pub fn J0(x: f64) -> f64 {
 }
 
 
-// for the validity of the calculation, see http://www.mhtlab.uwaterloo.ca/courses/me755/web_chap4.pdf
+/// Computes J1(x) ( bessel function of the first kind of first order )
+///
+/// Splits the calculations into two regimes where different approximations hold
+/// for the validity of the calculation, see http://www.mhtlab.uwaterloo.ca/courses/me755/web_chap4.pdf
 pub fn J1(x: f64) -> f64 {
   let mut z = x;
   let mut sign = 1.;
@@ -38,37 +44,45 @@ pub fn J1(x: f64) -> f64 {
   return sign * J1b(x)
 }
 
-
+/// Computes J0(x), for small values of x
 pub fn J0a(x: f64) -> f64 {
   1. - x.pow(2) / 4. + x.pow(4) / 64. - x.pow(6) / (2304.) + x.pow(8) / 147456. -
       x.pow(10) / 14745600. + x.pow(12) / 2123366400. - x.pow(14) / 416179814400.
 }
 
-// for 'large' values of x we use approximations described in:
-// Harrison, John. "Fast and accurate Bessel function computation."
-// 2009 19th IEEE Symposium on Computer Arithmetic. IEEE, 2009.
 
+/// Computes J0(x), for large values of x
+///
+/// for 'large' values of x we use approximations described in:
+/// Harrison, John. "Fast and accurate Bessel function computation."
+/// 2009 19th IEEE Symposium on Computer Arithmetic. IEEE, 2009.
 pub fn J0b(x: f64) -> f64 {
   let trigarg: f64 = x - PI / 4. - 1. / (8. * x) + 25. / (384. * x.pow(3));
   (2. / (PI * x)).sqrt() * (1. - (4. * x).pow(-2) + 53. / (512. * x.pow(4))) * trigarg.cos()
 }
 
-
+/// Computes J1(x), for small values of x
 pub fn J1a(x: f64) -> f64 {
   x / 2. - x.pow(3) / 16. + x.pow(5) / 384. - x.pow(7) / 18432.
 }
 
+/// Computes J1(x), for large values of x
+///
+/// for 'large' values of x we use approximations described in:
+/// Harrison, John. "Fast and accurate Bessel function computation."
+/// 2009 19th IEEE Symposium on Computer Arithmetic. IEEE, 2009.
 pub fn J1b(x: f64) -> f64 {
   let trigarg: f64 = x - 3. * PI / 4. + 3. / (8. * x) - 21. / (128. * x.pow(3));
   (2. / (PI * x)).sqrt() * (1. + 3. * (4. * x).pow(-2) - 99. / (512. * x.pow(4))) * trigarg.cos()
 }
 
 
-// computes the next bessel "Jn(x)" using the values of Jn_minus_one(x) and Jn_minus_two(x) (at same x)
-// this makes use of the recurrence relation Jn(x) = 2*(n-1) / x * Jn_minus_one(x) - Jn_minus_two(x)
-// as described in:
-// Goldstein, M., and R. M. Thaler. "Recurrence techniques for the calculation of Bessel functions."
-// Mathematics of Computation 13.66 (1959): 102-108.
+/// computes the next bessel "Jn(x)" using the values of Jn_minus_one(x) and Jn_minus_two(x) (at same x)
+///
+/// this makes use of the recurrence relation Jn(x) = 2*(n-1) / x * Jn_minus_one(x) - Jn_minus_two(x)
+/// as described in:
+/// Goldstein, M., and R. M. Thaler. "Recurrence techniques for the calculation of Bessel functions."
+/// Mathematics of Computation 13.66 (1959): 102-108.
 pub fn nextBessel(n: u64, x: f64, Jn_minus_one: f64, Jn_minus_two: f64) -> f64 {
   let mut sign = 1.;
   let mut z = x;
@@ -87,7 +101,29 @@ pub fn nextBessel(n: u64, x: f64, Jn_minus_one: f64, Jn_minus_two: f64) -> f64 {
   return sign * (2. * ((n - 1) as f64) / z * Jn_minus_one) - Jn_minus_two
 }
 
-
+/// computes the value of Jn(x) for given n and x
+///
+/// Based on the implementation in the Cephes mathematical library.
+/// See [https://github.com/vks/special-fun/blob/master/cephes-double/jn.c](https://github.com/vks/special-fun/blob/master/cephes-double/jn.c)
+/// for the original implementation.
+///
+/// # Examples
+/// ```
+/// # use helixiser::bessel_utils::Jn;
+/// # use assert_approx_eq::assert_approx_eq;
+/// // Bessel function of 8th order at x=2
+/// let J8_2 = Jn(8, 2.);
+/// assert_approx_eq!(J8_2, 0.00002217955, 0.000001);
+///
+/// let J3_12 = Jn(3, 12.);
+/// assert_approx_eq!(J3_12, 0.19513693, 0.000001);
+///
+/// let J15_9dot5 = Jn(15, 9.5);
+/// assert_approx_eq!(J15_9dot5, 0.00247161, 0.000001);
+///
+/// let J30_30 = Jn(30, 30.);
+/// assert_approx_eq!(J30_30, 0.1439358, 0.000001);
+/// ```
 pub fn Jn(n: u64, x: f64) -> f64 {
   let mut sign = 1.;
   let mut z: f64 = x;
@@ -139,6 +175,25 @@ pub fn Jn(n: u64, x: f64) -> f64 {
   return sign * ans;
 }
 
+/// get x value of the first maximum of Jn(x) for given n.
+///
+/// Uses tabulated values
+/// # Examples
+/// ```
+/// # use helixiser::bessel_utils::bessel_first_max;
+/// # use assert_approx_eq::assert_approx_eq;
+/// let zero_0 = bessel_first_max(0);
+///
+/// assert_approx_eq!(zero_0, 0.);
+///
+/// let zero_2 = bessel_first_max(2);
+///
+/// assert_approx_eq!(zero_2, 3.054, 0.001);
+///
+/// let zero_2 = bessel_first_max(10);
+///
+/// assert_approx_eq!(zero_2, 11.770, 0.001);
+/// ```
 pub fn bessel_first_max(n: u32) -> f64 {
   let bessel_max_array: Vec<f64> = vec![
     0.0,  // n=0

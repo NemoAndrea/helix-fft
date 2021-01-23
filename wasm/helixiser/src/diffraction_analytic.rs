@@ -4,6 +4,7 @@
 
 use crate::bessel_utils::{ Jn };
 use crate::helix::Helix;
+use crate::wavefront::Wavefront;
 
 use ndarray::{Array2, Array1, Array, ArrayView};
 use std::f64::consts::PI;
@@ -12,11 +13,16 @@ use num:: {Complex, complex::Complex64, traits::Pow };
 
 /// Computes Analytic diffraction pattern for helix object
 ///
-/// returns a vector, with values in order (R,G,B,A) and then next pixel etc.
+/// returns a Wavefront struct.
 /// ```
-/// use helixiser::helix::{ Helix, Handedness };
-/// use helixiser::diffraction_analytic::diff_analytic;
+/// # use helixiser::helix::{ Helix, Handedness };
+/// # use helixiser::diffraction_analytic::diff_analytic;
+/// use helixiser::wavefront::Wavefront;
+/// use num::complex::Complex64;
+/// use ndarray::Array2;
 ///
+///
+/// // it is also possible to use Helix::new()
 /// let strand_1 = Helix {
 ///         radius: 1.,
 ///         rise: 0.34,
@@ -31,10 +37,9 @@ use num:: {Complex, complex::Complex64, traits::Pow };
 ///        rotation: 143.,
 ///         ..strand_1  // copy remaining fields over from strand 1
 /// };
-/// //image as RGBA vector will be 512x512x4 (height x width x RGBA)elements
-/// let image_as_RGBA_vector: Vec<f64> = diff_analytic(vec![strand_1, strand_2], 6, 2, 0.01, 512);
+/// let complex_img: Wavefront = diff_analytic(vec![strand_1, strand_2], 6, 2, 0.01, 512);
 /// ```
-pub fn diff_analytic(helices: Vec<Helix>, n_range: u8, m_range: u8, scale: f64, raster_size: u32) -> Vec<f64> {
+pub fn diff_analytic(helices: Vec<Helix>, n_range: u8, m_range: u8, scale: f64, raster_size: u32) -> Wavefront {
     let num_pix: usize = (raster_size * raster_size) as usize;
 
     let mut m_vals: Vec<f64> = Vec::new();
@@ -98,24 +103,6 @@ pub fn diff_analytic(helices: Vec<Helix>, n_range: u8, m_range: u8, scale: f64, 
             }
         }
     }
-
-    // flatten the array
-    let image_flat = image.into_shape((num_pix, 1)).unwrap();
-    let normalisation = helices.len() as f64;  // ensure that more helices does not mean higher intensities
-
-    let intensity = image_flat.mapv(
-        //  we compute the intensity, which is |amplitude|^2.
-        //  We clip some values (>256), but it's probably best for now with limited dynamic range
-        |amplitude| (amplitude / normalisation).norm().pow(2) * 511.
-    );
-
-    let mut out: Vec<f64> = vec![0 as f64; 4 * num_pix];
-    for i in 0..num_pix {
-        out[i * 4] = intensity[[i, 0]]; //image_flat[[i, 0]]; // set Red
-        out[i * 4 + 1] = intensity[[i, 0]]; // set Green
-        out[i * 4 + 2] = intensity[[i, 0]]; // set Blue
-        out[i * 4 + 3] = 255 as f64;  // set Alpha
-    }
-    out
+    return Wavefront::new(image );
 }
 

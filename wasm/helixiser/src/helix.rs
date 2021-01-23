@@ -1,13 +1,14 @@
 //! # The main helix object
 use std::f64::consts::PI;
 
-/// A struct representing a Helix
+/// A Helix struct
+#[derive(Debug, Clone)]
 pub struct Helix {
     /// A Helix has a radius value, which should be positive
     pub radius: f64,
     /// The helical rise is the distance between subunits along the helix axis (i.e. z axis)
     pub rise: f64,
-    /// The amount of subunits in a full turn of a helix. Need not be integer
+    /// The amount of subunits in a full turn of a helix. Can be decimal value.
     pub frequency: f64,
     /// The size of each subunit
     pub unit_size: f64,
@@ -21,6 +22,39 @@ pub struct Helix {
 
 
 impl Helix {
+    /// Create a new Helix
+    ///
+    /// Directly instantiating is also permitted, as it is more human readable, so may be
+    /// preferred for example code. When programmatically generating helices, it is best to use
+    /// the Helix::new() approach as it panics when it encounters invalid values.
+    /// # Examples
+    /// ```
+    /// use helixiser::helix::{Helix, Handedness};
+    /// let my_helix = Helix::new(0.1, 0.4, 12., 0.1, 5.6, 180., Handedness::Right);
+    /// let second = my_helix.clone();
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// The new function will panic if any of radius, rise, frequency, unit_size or offset are
+    /// smaller than or equal to zero.
+    pub fn new(radius: f64, rise: f64, frequency: f64, unit_size: f64, offset: f64, rotation: f64, handedness: Handedness) -> Helix {
+        assert!(radius > 0.);
+        assert!(rise > 0.);
+        assert!(frequency > 0.);
+        assert!(unit_size > 0.);
+        assert!(offset >= 0.);
+        Helix {
+            radius,
+            rise,
+            frequency,
+            unit_size,
+            offset,
+            rotation,
+            handedness,
+        }
+    }
+
     /// Compute the pitch of the helix. This is the distance between the helix backbone along
     /// the helix axis (i.e. z axis) after a full rotation. Does not need to be an integer
     /// multiple of the rise. Is computed as `pitch` = `rise` * `frequency`.
@@ -28,21 +62,12 @@ impl Helix {
     /// # Examples
     /// ```
     /// use std::f64::consts::PI;
-    /// use crate::helixiser::helix::{ Handedness, Helix };
+    /// # use crate::helixiser::helix::{ Handedness, Helix };
     ///
-    /// let myHelix = Helix {
-    ///         radius: 18.9,
-    ///         rise: 0.55,
-    ///         frequency: 11.5,
-    ///         unit_size: 0.1,
-    ///         offset: 0.,
-    ///         rotation: 0.,
-    ///         handedness: Handedness::Right,
-    /// };
+    /// let my_helix = Helix::new( 18.9, 0.55, 11.5, 0.1, 0., 0., Handedness::Right );
+    /// let myPitch = my_helix.pitch();
     ///
-    /// let myPitch = myHelix.pitch();
-    ///
-    /// assert_eq!(myPitch, 11.5*0.55)
+    /// assert_eq!(myPitch, 11.5 * 0.55)
     /// ```
     pub fn pitch(&self) -> f64 {
         self.rise * self.frequency
@@ -53,19 +78,10 @@ impl Helix {
     /// # Examples
     /// ```
     /// use std::f64::consts::PI;
-    /// use crate::helixiser::helix::{ Handedness, Helix };
+    /// # use crate::helixiser::helix::{ Handedness, Helix };
     ///
-    /// let myHelix = Helix {
-    ///         radius: 1.,
-    ///         rise: 0.34,
-    ///         frequency: 10.,
-    ///         unit_size: 0.18,
-    ///         offset: 0.,
-    ///         rotation: 90.,
-    ///         handedness: Handedness::Right,
-    /// };
-    ///
-    /// let rotation = myHelix.rotation_to_rad();
+    /// let my_helix = Helix::new ( 1.0, 0.34, 10., 0.18, 0., 90., Handedness::Right );
+    /// let rotation = my_helix.rotation_to_rad();
     ///
     /// assert_eq!(rotation, PI/2f64)
     /// ```
@@ -79,19 +95,10 @@ impl Helix {
     /// # Examples
     /// ```
     /// use std::f64::consts::PI;
-    /// use crate::helixiser::helix::{ Handedness, Helix };
+    /// # use crate::helixiser::helix::{ Handedness, Helix };
     ///
-    /// let myHelix = Helix {
-    ///         radius: 2.,
-    ///         rise: 0.34,
-    ///         frequency: 8.0,
-    ///         unit_size: 0.1,
-    ///         offset: 0.,
-    ///         rotation: 90.,
-    ///         handedness: Handedness::Right,
-    /// };
-    ///
-    /// let angle_per_subunit = myHelix.rad_per_subunit();
+    /// let my_helix = Helix::new ( 2.0, 0.34, 8., 0.1, 0., 90., Handedness::Right );
+    /// let angle_per_subunit = my_helix.rad_per_subunit();
     ///
     /// assert_eq!(angle_per_subunit, PI/4f64)
     /// ```
@@ -99,7 +106,7 @@ impl Helix {
 }
 
 
-/// A simple enum to specify the handedness of an object. Can be either left or right handed.
+/// An enum to specify the handedness of an object. Can be either left or right handed.
 #[derive(Debug, Copy, Clone)]
 pub enum Handedness {
     Right,
