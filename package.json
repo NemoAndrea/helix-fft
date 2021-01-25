@@ -16,6 +16,7 @@
     "text-encoding": "^0.7.0",
     "three": "^0.119.1",
     "vue": "^2.6.12",
+    "vue-router": "^3.5.0",
     "vue-social-sharing": "^3.0.4",
     "vuetify": "^2.4.2"
   },
@@ -35,7 +36,7 @@
     "webpack": "~4.29",
     "webpack-bundle-analyzer": ">=3.3.2",
     "webpack-cli": "~3.2",
-    "webpack-dev-server": "~3.1",
+    "webpack-dev-server": "^3.11.2",
     "webpack-hot-middleware": "~2.24",
     "webpack-merge": "~4.2"
   },

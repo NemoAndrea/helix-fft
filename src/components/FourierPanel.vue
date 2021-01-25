@@ -41,7 +41,7 @@
                                 v-on:lut_update="zoomDiffractionPlot(lastTransform)"
                                 ref="LUTmanager"/>
                     <!-- DISTANCE MEASUREMENT SETTINGS-->
-                    <v-menu left bottom :close-on-click=true transition="slide-y-transition" :offset-y=true >
+                    <v-menu left bottom :close-on-click=true transition="slide-y-transition" :offset-y=true v-if="helixFamily!=null">
                         <template v-slot:activator="{ on: menu, attrs }">
                             <v-tooltip bottom>
                                 <template v-slot:activator="{ on: tooltip }">
@@ -70,8 +70,8 @@
                             </v-list-item>
                         </v-list>
                     </v-menu>
-
-                    <v-tooltip bottom >
+                    <!--Toggle overlay-->
+                    <v-tooltip bottom v-if="helixFamily!=null">
                         <template v-slot:activator="{ on }">
                             <v-btn
                                     icon color="var(--bw-button-color)"
@@ -83,7 +83,7 @@
                         <span> Toggle overlay of bessel functions first maxima </span>
                     </v-tooltip>
                     <!-- SET PLOT SCALE -->
-                    <v-tooltip bottom >
+                    <v-tooltip bottom v-if="helixFamily!=null">
                         <template v-slot:activator="{ on }">
                             <v-icon v-on="on" color="var(--bw-button-color)" @click="update_plot_scale(true)"
                                     class="display-controls-button"> mdi-arrow-split-horizontal</v-icon>

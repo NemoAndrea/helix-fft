@@ -263,7 +263,7 @@
 
             parseQueryString() {
                 console.log('Checking query string');
-                let searchParams =  new URLSearchParams( window.location.search );
+                let searchParams =  new URLSearchParams( this.$route.hash );
 
                 let newHelixFamily = [];
                 let helix = {};
@@ -272,7 +272,8 @@
                 let badKeys = [];
 
                 for (let [key, value] of searchParams) {
-
+                    key = key.replace('#','');
+                    console.log(key, value)
 
                     if (key === 'radius') {  // we assume that the previous helix was specified if we add new radius
                         newHelixFamily.push({...this.default_params});  // add a new helix object
@@ -330,8 +331,8 @@
             },
 
             generateModelURL(name, displayParams) {
-                let exportString = window.location.href.split('?')[0];  // get URL minus any pre-existing params
-                exportString += '?';
+                let exportString = window.location.href.split('#')[0];  // get URL minus any pre-existing params
+                exportString += '#/#';
 
                 // add the model name to the URL (can be empty)
                 if (name) {
