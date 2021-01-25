@@ -253,11 +253,10 @@ export default {
     },
   },
   methods: {
-    loadExample() {
-      window.location.hash += '#name=B-DNA&m=1###&radius=1&rise=0.34&frequency=10&unit_size=0.18' +
+    loadExample() {  // load an example via search query string. Will reload the page.
+      window.location.search = 'name=B-DNA&m=1&radius=1&rise=0.34&frequency=10&unit_size=0.18' +
               '&radius=1&rise=0.34&frequency=10&unit_size=0.18&rotation=143';
-      location.reload()
-    },
+      },
 
     setHelixFamily (newHelixFamily) {
       this.helixFamily = newHelixFamily;
@@ -349,6 +348,11 @@ export default {
     const local_unit = localStorage.getItem("distance_unit");
     local_unit !== null ? this.setUnit( local_unit ) : localStorage.setItem("distance_unit", 'angstrom');
 
+    // check if we are running helixiser locally using Node.js
+    if(typeof process === 'object') {
+      console.log('[Node] Running from Node')
+
+    }
   }
 };
 </script>

@@ -261,9 +261,9 @@
                 }
             },
 
-            parseQueryString() {  // this uses not very robust methods
+            parseQueryString() {
                 console.log('Checking query string');
-                const searchParams = new URLSearchParams(window.location.hash);
+                let searchParams =  new URLSearchParams( window.location.search );
 
                 let newHelixFamily = [];
                 let helix = {};
@@ -272,7 +272,7 @@
                 let badKeys = [];
 
                 for (let [key, value] of searchParams) {
-                    key = key.replace('#', '');  // remove the # from the parameter (only needed for the first key)
+
 
                     if (key === 'radius') {  // we assume that the previous helix was specified if we add new radius
                         newHelixFamily.push({...this.default_params});  // add a new helix object
@@ -285,11 +285,11 @@
                     } else if (key === 'name') {
                         this.$emit('updateName', value);  // this query model has a name. Update parent.
                     } else if (key === 'n') {
-                        displayParams[key] = value.replace('###', '');  // may have trailing ###
+                        displayParams[key] = value
                     } else if (key === 'm') {
-                        displayParams[key] = value.replace('###', '');  // may have trailing ###
+                        displayParams[key] = value
                     } else if (key === 's') {
-                        displayParams[key] = value.replace('###', '');  // may have trailing ###
+                        displayParams[key] = value
                     } else {
                         badKeys.push(key)
                     }
@@ -330,8 +330,8 @@
             },
 
             generateModelURL(name, displayParams) {
-                let exportString = window.location.href.split('#')[0];  // get URL minus any pre-existing params
-                exportString += '#';
+                let exportString = window.location.href.split('?')[0];  // get URL minus any pre-existing params
+                exportString += '?';
 
                 // add the model name to the URL (can be empty)
                 if (name) {
@@ -340,13 +340,12 @@
                 // add the display parameters to the URL (can be empty)
                 if (Object.entries(displayParams).length > 0) {  // check if empty
                     for (const [key, value] of Object.entries(displayParams)) {
-                        if (exportString.slice(-1) !== '#') {  // prevent problems with first entry
+                        if (exportString.slice(-1) !== '?') {  // prevent problems with first entry
                             exportString += '&' + key + '=' + value
                         } else { // if it is the first entry of the params, it shouldnt have an &
                             exportString += key + '=' + value
                         }
                     }
-                    exportString += '###'; // we add another hash to delineate the display params from helix params
                 }
 
                 // add the helices in the URL
